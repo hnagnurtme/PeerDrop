@@ -3,17 +3,19 @@ import { Header ,Footer} from "@/shared/components";
 
 const MainLayout = () => {
     return (
-        <div className="main-layout">
-            {/* Add header, navigation, or other shared UI here */ }
-            <Header/>
+        <div className="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col overflow-x-hidden bg-grid-patter">
+            {/* Header */}
+            <Header />
 
-            <main>
+            {/* Main  */}
+            <main className="flex-1 container mx-auto px-4 py-6">
                 <Outlet />
             </main>
-            {/* Add footer or other shared UI here */ }
+            {/* Footer */ }
             <Footer/>
         </div>
     );
 };
 
 export default MainLayout;
+
