@@ -8,20 +8,14 @@ namespace PeerDrop.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
-    private readonly IAuthService _authService;
-
-    public AuthController(IAuthService authService)
-    {
-        _authService = authService;
-    }
 
     [HttpPost("login")]
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
     {
-        var result = await _authService.LoginAsync(request.Email, request.Password);
+        var result = await authService.LoginAsync(request.Email, request.Password);
         return Ok(ApiResponse<LoginResponse>.Success(result, "Login successful"));
     }
 
@@ -29,7 +23,7 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<LoginResponse>>> Register([FromBody] RegisterRequest request)
     {
-        var result = await _authService.RegisterAsync(request.Email, request.Password, request.FullName);
+        var result = await authService.RegisterAsync(request.Email, request.Password, request.FullName);
         return Ok(ApiResponse<LoginResponse>.Success(result, "Registration successful"));
     }
 
@@ -37,7 +31,7 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<LoginResponse>>> RefreshToken([FromBody] string refreshToken)
     {
-        var result = await _authService.RefreshTokenAsync(refreshToken);
+        var result = await authService.RefreshTokenAsync(refreshToken);
         return Ok(ApiResponse<LoginResponse>.Success(result, "Token refreshed successfully"));
     }
 
@@ -45,7 +39,7 @@ public class AuthController : ControllerBase
     [Authorize]
     public async Task<ActionResult<ApiResponse<bool>>> Logout()
     {
-        await _authService.LogoutAsync();
+        await authService.LogoutAsync();
         return Ok(ApiResponse<bool>.Success(true, "Logged out successfully"));
     }
 }

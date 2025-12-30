@@ -19,9 +19,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add DbContext
+        // Add DbContext (PostgreSQL)
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         // Add Repositories
         services.AddScoped<IUserRepository, UserRepository>();

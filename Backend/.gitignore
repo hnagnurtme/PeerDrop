@@ -93,6 +93,8 @@ secrets.json
 *.pfx
 *.p12
 
+PeerDrop.API/appsettings.Production.json
+
 # Entity Framework Migrations (keep the folder but ignore generated files if needed)
 # **/Migrations/*.Designer.cs
 

@@ -30,15 +30,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
-if (app.Environment.IsDevelopment())
-{
+// // Configure the HTTP request pipeline
+// if (app.Environment.IsDevelopment())
+// {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "PeerDrop API v1");
     });
-}
+// }
 
 app.UseMiddleware<ExceptionMiddleware>();
 
