@@ -1,10 +1,59 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html class="light" lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>PeerDrop</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans:wght@400;500;700&display=swap"
+      rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+      rel="stylesheet" />
+    <style>
+      .pixelated-image {
+        image-rendering: pixelated;
+      }
+
+      @keyframes radar-spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .radar-sweep {
+        background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(75, 244, 37, 0.6) 360deg);
+        animation: radar-spin 3s linear infinite;
+      }
+
+      @keyframes marquee {
+        0% {
+          transform: translateX(100%);
+        }
+        100% {
+          transform: translateX(-100%);
+        }
+      }
+
+      .animate-marquee {
+        animation: marquee 20s linear infinite;
+      }
+
+      .grid-bg {
+        background-size: 40px 40px;
+        background-image:
+          linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
