@@ -125,11 +125,16 @@ const SignupForm: React.FC<SignupProps> = ( { onSignup, onBackToLogin } ) => {
                         <div className="md:col-span-2 pt-4">
                             <Button
                                 type="submit"
-                                size="lg"
-                                icon={ !isRegistering ? <Icons.ArrowForward /> : undefined }
                                 className={ isRegistering ? 'opacity-80 pointer-events-none' : '' }
                             >
-                                { isRegistering ? <span className="animate-pulse">Creating account...</span> : 'Sign Up' }
+                                { isRegistering ? (
+                                    <span className="animate-pulse">Creating account...</span>
+                                ) : (
+                                    <span className="flex items-center gap-3">
+                                        Sign Up
+                                        <Icons.ArrowForward />
+                                    </span>
+                                ) }
                             </Button>
                         </div>
                     </form>

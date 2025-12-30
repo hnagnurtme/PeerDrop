@@ -16,6 +16,10 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IHashService, BCryptPasswordHasher>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+        // Add HttpContextAccessor (required for CurrentUserService)
+        services.AddHttpContextAccessor();
 
         // Add AutoMapper
         services.AddAutoMapper(typeof(MappingProfile));

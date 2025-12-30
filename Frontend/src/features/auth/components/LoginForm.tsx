@@ -82,14 +82,15 @@ const LoginForm: React.FC<LoginProps> = ( { onLogin, onGoToSignup } ) => {
 
                         <Button
                             type="submit"
-                            size="lg"
                             className={ `${ isAuthenticating ? 'opacity-80 pointer-events-none' : '' }` }
-                            icon={ !isAuthenticating ? <Icons.ArrowForward /> : undefined }
                         >
                             { isAuthenticating ? (
                                 <span className="flex items-center gap-4 animate-pulse">AUTHENTICATING...</span>
                             ) : (
-                                <span className="glitch-hover">Execute Login</span>
+                                <span className="glitch-hover flex items-center gap-3">
+                                    Execute Login
+                                    <Icons.ArrowForward />
+                                </span>
                             ) }
                         </Button>
                     </form>

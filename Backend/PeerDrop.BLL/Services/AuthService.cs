@@ -18,17 +18,24 @@ public class AuthService : IAuthService
     private readonly IUserRepository _userRepository;
     private readonly JwtSettings _jwtSettings;
     private readonly IHashService _hashService;
-    public AuthService(IUserRepository userRepository, IMapper mapper, IOptions<JwtSettings> jwtSettings, IHashService hashService)
+    private readonly ICurrentUserService _currentUserService;
+
+    public AuthService(
+        IUserRepository userRepository, 
+        IMapper mapper, 
+        IOptions<JwtSettings> jwtSettings, 
+        IHashService hashService,
+        ICurrentUserService currentUserService)
     {
         _mapper = mapper;
         _userRepository = userRepository;
         _jwtSettings = jwtSettings.Value;
-        _mapper = mapper;
         _hashService = hashService;
+        _currentUserService = currentUserService;
     }
     
 
-    public async Task<LoginResponse> LoginAsync(string email, string password)
+    public async Task<AuthResponse> LoginAsync(string email, string password)
     {
         var user = await _userRepository.GetByEmailAsync(email)
             ?? throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
@@ -43,10 +50,10 @@ public class AuthService : IAuthService
             throw new UnauthorizedException(ErrorMessages.AccountDisabled, ErrorCodes.AuthAccountDisabled);
         }
 
-        return GenerateLoginResponse(user);
+        return await GenerateAndSaveTokensAsync(user);
     }
 
-    public async Task<LoginResponse> RegisterAsync(string email, string password, string fullName)
+    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName)
     {
         if (await _userRepository.EmailExistsAsync(email))
         {
@@ -66,23 +73,55 @@ public class AuthService : IAuthService
 
         await _userRepository.CreateAsync(user);
 
-        return GenerateLoginResponse(user);
+        return await GenerateAndSaveTokensAsync(user);
     }
 
-    public async Task<LoginResponse> RefreshTokenAsync(string refreshToken)
+    public async Task<AuthResponse> RefreshTokenAsync(string refreshToken, string userId)
     {
-        // In a real application, you would validate the refresh token
-        // and retrieve the user associated with it
-        throw new NotImplementedException("Refresh token logic needs to be implemented");
+        if (!Guid.TryParse(userId, out var userGuid))
+        {
+            throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
+        }
+
+        var user = await _userRepository.GetByIdAsync(userGuid)
+            ?? throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
+
+        // Validate refresh token
+        if (user.RefreshToken != refreshToken)
+        {
+            throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
+        }
+
+        // Check if refresh token has expired
+        if (user.RefreshTokenExpiry == null || user.RefreshTokenExpiry <= DateTime.UtcNow)
+        {
+            throw new UnauthorizedException(ErrorMessages.TokenExpired, ErrorCodes.AuthTokenExpired);
+        }
+
+        // Generate new tokens
+        return await GenerateAndSaveTokensAsync(user);
     }
 
-    public Task LogoutAsync()
+    public async Task LogoutAsync()
     {
-        // In a real application, you would invalidate the refresh token
-        return Task.CompletedTask;
+        var userId = _currentUserService.UserId;
+        if (userId == null)
+        {
+            return;
+        }
+
+        var user = await _userRepository.GetByIdAsync(userId.Value);
+        if (user != null)
+        {
+            // Invalidate refresh token
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+        }
     }
 
-    private LoginResponse GenerateLoginResponse(User user)
+    private async Task<AuthResponse> GenerateAndSaveTokensAsync(User user)
     {
         var secretKey = _jwtSettings.SecretKey;
         var issuer = _jwtSettings.Issuer;
@@ -98,10 +137,20 @@ public class AuthService : IAuthService
             audience,
             expiryInMinutes);
 
-        return new LoginResponse
+        // Generate refresh token and set expiry (7 days)
+        var refreshToken = Guid.NewGuid().ToString();
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        // Update user with new refresh token
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiry = refreshTokenExpiry;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user);
+
+        return new AuthResponse
         {
             AccessToken = accessToken,
-            RefreshToken = Guid.NewGuid().ToString(),
+            RefreshToken = refreshToken,
             ExpiresAt = DateTime.UtcNow.AddMinutes(expiryInMinutes),
             User = new UserInfo
             {

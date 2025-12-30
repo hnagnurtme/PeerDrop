@@ -10,7 +10,7 @@ public class AuthController(IAuthService authService) : BaseApiController
 {
     [HttpPost("login")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> Login([FromBody] LoginRequest request)
     {
         var result = await authService.LoginAsync(request.Email, request.Password);
         return OkResponse(result, "Login successful");
@@ -18,7 +18,7 @@ public class AuthController(IAuthService authService) : BaseApiController
 
     [HttpPost("register")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<LoginResponse>>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> Register([FromBody] RegisterRequest request)
     {
         var result = await authService.RegisterAsync(request.Email, request.Password, request.FullName);
         return CreatedResponse(result, "Registration successful");
@@ -26,9 +26,9 @@ public class AuthController(IAuthService authService) : BaseApiController
 
     [HttpPost("refresh-token")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResponse<LoginResponse>>> RefreshToken([FromBody] string refreshToken)
+    public async Task<ActionResult<ApiResponse<AuthResponse>>> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        var result = await authService.RefreshTokenAsync(refreshToken);
+        var result = await authService.RefreshTokenAsync(request.RefreshToken , request.UserId);
         return OkResponse(result, "Token refreshed successfully");
     }
 

@@ -1,6 +1,6 @@
 namespace PeerDrop.Shared.DTOs.Auth;
 
-public class LoginResponse
+public class AuthResponse
 {
     public string AccessToken { get; set; } = string.Empty;
     public string RefreshToken { get; set; } = string.Empty;
