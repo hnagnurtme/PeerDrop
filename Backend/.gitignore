@@ -1,0 +1,112 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.cache
+*.vspscc
+*.vssscc
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+project.lock.json
+project.fragment.lock.json
+
+# User-specific files
+*.rsuser
+*.userprefs
+
+# Build output
+[Bb]uild[Ll]og.*
+*.log
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.vstest.discoveryengine.*.*
+
+# NCrunch
+*.ncrunchproject
+*.ncrunchsolution
+_NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# Coverlet
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Web workbench
+.sass-cache/
+
+# Azure
+.azure/
+
+# Publish output
+publish/
+PublishOutput/
+
+# NuGet package restore
+*.designer.cs
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environment files
+*.env
+.env.local
+.env.*.local
+appsettings.Development.json
+appsettings.Local.json
+
+# Secrets
+secrets.json
+*.pfx
+*.p12
+
+PeerDrop.API/appsettings.Production.json
+
+# Entity Framework Migrations (keep the folder but ignore generated files if needed)
+# **/Migrations/*.Designer.cs
+
+# JetBrains Rider
+.idea/
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Temp files
+*~
+*.swp
+*.tmp
