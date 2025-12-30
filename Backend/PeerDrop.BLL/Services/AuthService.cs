@@ -1,9 +1,10 @@
 using AutoMapper;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using PeerDrop.BLL.Exceptions;
 using PeerDrop.BLL.Interfaces.Services;
 using PeerDrop.DAL.Entities;
 using PeerDrop.DAL.Repositories;
+using PeerDrop.Shared.Configurations;
 using PeerDrop.Shared.Constants;
 using PeerDrop.Shared.DTOs.Auth;
 using PeerDrop.Shared.Enums;
@@ -13,30 +14,33 @@ namespace PeerDrop.BLL.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    private readonly IConfiguration _configuration;
-
-    public AuthService(IUserRepository userRepository, IMapper mapper, IConfiguration configuration)
+    private readonly IUserRepository _userRepository;
+    private readonly JwtSettings _jwtSettings;
+    private readonly IHashService _hashService;
+    public AuthService(IUserRepository userRepository, IMapper mapper, IOptions<JwtSettings> jwtSettings, IHashService hashService)
     {
-        _userRepository = userRepository;
         _mapper = mapper;
-        _configuration = configuration;
+        _userRepository = userRepository;
+        _jwtSettings = jwtSettings.Value;
+        _mapper = mapper;
+        _hashService = hashService;
     }
+    
 
     public async Task<LoginResponse> LoginAsync(string email, string password)
     {
         var user = await _userRepository.GetByEmailAsync(email)
-            ?? throw new NotFoundException(ErrorMessages.UserNotFound);
+            ?? throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
 
-        if (!VerifyPassword(password, user.PasswordHash))
+        if (!_hashService.Verify(password, user.PasswordHash))
         {
-            throw new BusinessException(ErrorMessages.InvalidCredentials);
+            throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
         }
 
         if (!user.IsActive)
         {
-            throw new BusinessException(ErrorMessages.AccountDisabled);
+            throw new UnauthorizedException(ErrorMessages.AccountDisabled, ErrorCodes.AuthAccountDisabled);
         }
 
         return GenerateLoginResponse(user);
@@ -46,14 +50,14 @@ public class AuthService : IAuthService
     {
         if (await _userRepository.EmailExistsAsync(email))
         {
-            throw new BusinessException(ErrorMessages.EmailAlreadyExists);
+            throw new UnprocessableEntityException(ErrorMessages.EmailAlreadyExists, ErrorCodes.AuthEmailAlreadyExists);
         }
 
         var user = new User
         {
             Id = Guid.NewGuid(),
             Email = email,
-            PasswordHash = HashPassword(password),
+            PasswordHash = _hashService.Hash(password),
             FullName = fullName,
             Role = UserRole.User,
             IsActive = true,
@@ -80,11 +84,10 @@ public class AuthService : IAuthService
 
     private LoginResponse GenerateLoginResponse(User user)
     {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"]!;
-        var issuer = jwtSettings["Issuer"]!;
-        var audience = jwtSettings["Audience"]!;
-        var expiryInMinutes = int.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
+        var secretKey = _jwtSettings.SecretKey;
+        var issuer = _jwtSettings.Issuer;
+        var audience = _jwtSettings.Audience;
+        var expiryInMinutes = _jwtSettings.ExpiryInMinutes;
 
         var accessToken = JwtHelper.GenerateToken(
             user.Id,
@@ -108,15 +111,5 @@ public class AuthService : IAuthService
                 Role = user.Role.ToString()
             }
         };
-    }
-
-    private static string HashPassword(string password)
-    {
-        return BCrypt.Net.BCrypt.HashPassword(password);
-    }
-
-    private static bool VerifyPassword(string password, string passwordHash)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, passwordHash);
     }
 }

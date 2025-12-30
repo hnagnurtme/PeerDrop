@@ -1,41 +1,16 @@
 using System.Text;
-using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PeerDrop.API.Filters;
-using PeerDrop.BLL.Interfaces.Services;
-using PeerDrop.BLL.Mapping;
-using PeerDrop.BLL.Services;
-using PeerDrop.BLL.Validators;
-using PeerDrop.DAL.DbContexts;
-using PeerDrop.DAL.Repositories;
+using PeerDrop.Shared.Configurations;
 
 namespace PeerDrop.API;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
-        // Add DbContext (PostgreSQL)
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
-
-        // Add Repositories
-        services.AddScoped<IUserRepository, UserRepository>();
-
-        // Add Services
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IUserService, UserService>();
-
-        // Add AutoMapper
-        services.AddAutoMapper(typeof(MappingProfile));
-
-        // Add FluentValidation
-        services.AddValidatorsFromAssemblyContaining<LoginRequestValidator>();
-
         // Add Filters
         services.AddScoped<ValidationFilter>();
 
