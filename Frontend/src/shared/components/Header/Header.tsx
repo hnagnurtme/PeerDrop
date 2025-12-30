@@ -1,4 +1,3 @@
-import { SecondaryButton } from "../Button";
 
 export default function Header () {
 
@@ -26,9 +25,7 @@ export default function Header () {
                 </nav>
                 {/* Upgrade Button */ }
                 <div className="flex items-center gap-4">
-                    <SecondaryButton >
-                            Upgrade
-                    </SecondaryButton>
+            
                 </div>
 
 
