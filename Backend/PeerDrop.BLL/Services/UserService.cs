@@ -8,58 +8,50 @@ using PeerDrop.Shared.DTOs;
 
 namespace PeerDrop.BLL.Services;
 
-public class UserService : IUserService
+public class UserService(IUserRepository userRepository, IMapper mapper) : IUserService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IMapper _mapper;
-
-    public UserService(IUserRepository userRepository, IMapper mapper)
-    {
-        _userRepository = userRepository;
-        _mapper = mapper;
-    }
 
     public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
     {
-        var users = await _userRepository.GetAllAsync();
-        return _mapper.Map<IEnumerable<UserResponse>>(users);
+        var users = await userRepository.GetAllAsync();
+        return mapper.Map<IEnumerable<UserResponse>>(users);
     }
 
     public async Task<UserResponse> GetUserByIdAsync(Guid id)
     {
-        var user = await _userRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException(ErrorMessages.UserNotFound);
+        var user = await userRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
 
-        return _mapper.Map<UserResponse>(user);
+        return mapper.Map<UserResponse>(user);
     }
 
     public async Task<UserResponse> GetUserByEmailAsync(string email)
     {
-        var user = await _userRepository.GetByEmailAsync(email)
-            ?? throw new NotFoundException(ErrorMessages.UserNotFound);
+        var user = await userRepository.GetByEmailAsync(email)
+            ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
 
-        return _mapper.Map<UserResponse>(user);
+        return mapper.Map<UserResponse>(user);
     }
 
     public async Task<UserResponse> UpdateUserAsync(Guid id, UserResponse userDto)
     {
-        var user = await _userRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException(ErrorMessages.UserNotFound);
+        var user = await userRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
 
         user.FullName = userDto.FullName;
         user.UpdatedAt = DateTime.UtcNow;
 
-        var updatedUser = await _userRepository.UpdateAsync(user);
-        return _mapper.Map<UserResponse>(updatedUser);
+        var updatedUser = await userRepository.UpdateAsync(user);
+        return mapper.Map<UserResponse>(updatedUser);
     }
 
     public async Task<bool> DeleteUserAsync(Guid id)
     {
-        if (!await _userRepository.ExistsAsync(id))
+        if (!await userRepository.ExistsAsync(id))
         {
-            throw new NotFoundException(ErrorMessages.UserNotFound);
+            throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
         }
 
-        return await _userRepository.DeleteAsync(id);
+        return await userRepository.DeleteAsync(id);
     }
 }

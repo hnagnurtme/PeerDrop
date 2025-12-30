@@ -1,9 +1,10 @@
 using AutoMapper;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using PeerDrop.BLL.Exceptions;
 using PeerDrop.BLL.Interfaces.Services;
 using PeerDrop.DAL.Entities;
 using PeerDrop.DAL.Repositories;
+using PeerDrop.Shared.Configurations;
 using PeerDrop.Shared.Constants;
 using PeerDrop.Shared.DTOs.Auth;
 using PeerDrop.Shared.Enums;
@@ -13,47 +14,57 @@ namespace PeerDrop.BLL.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
     private readonly IMapper _mapper;
-    private readonly IConfiguration _configuration;
+    private readonly IUserRepository _userRepository;
+    private readonly JwtSettings _jwtSettings;
+    private readonly IHashService _hashService;
+    private readonly ICurrentUserService _currentUserService;
 
-    public AuthService(IUserRepository userRepository, IMapper mapper, IConfiguration configuration)
+    public AuthService(
+        IUserRepository userRepository, 
+        IMapper mapper, 
+        IOptions<JwtSettings> jwtSettings, 
+        IHashService hashService,
+        ICurrentUserService currentUserService)
     {
-        _userRepository = userRepository;
         _mapper = mapper;
-        _configuration = configuration;
+        _userRepository = userRepository;
+        _jwtSettings = jwtSettings.Value;
+        _hashService = hashService;
+        _currentUserService = currentUserService;
     }
+    
 
-    public async Task<LoginResponse> LoginAsync(string email, string password)
+    public async Task<AuthResponse> LoginAsync(string email, string password)
     {
         var user = await _userRepository.GetByEmailAsync(email)
-            ?? throw new NotFoundException(ErrorMessages.UserNotFound);
+            ?? throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
 
-        if (!VerifyPassword(password, user.PasswordHash))
+        if (!_hashService.Verify(password, user.PasswordHash))
         {
-            throw new BusinessException(ErrorMessages.InvalidCredentials);
+            throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
         }
 
         if (!user.IsActive)
         {
-            throw new BusinessException(ErrorMessages.AccountDisabled);
+            throw new UnauthorizedException(ErrorMessages.AccountDisabled, ErrorCodes.AuthAccountDisabled);
         }
 
-        return GenerateLoginResponse(user);
+        return await GenerateAndSaveTokensAsync(user);
     }
 
-    public async Task<LoginResponse> RegisterAsync(string email, string password, string fullName)
+    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName)
     {
         if (await _userRepository.EmailExistsAsync(email))
         {
-            throw new BusinessException(ErrorMessages.EmailAlreadyExists);
+            throw new UnprocessableEntityException(ErrorMessages.EmailAlreadyExists, ErrorCodes.AuthEmailAlreadyExists);
         }
 
         var user = new User
         {
             Id = Guid.NewGuid(),
             Email = email,
-            PasswordHash = HashPassword(password),
+            PasswordHash = _hashService.Hash(password),
             FullName = fullName,
             Role = UserRole.User,
             IsActive = true,
@@ -62,29 +73,60 @@ public class AuthService : IAuthService
 
         await _userRepository.CreateAsync(user);
 
-        return GenerateLoginResponse(user);
+        return await GenerateAndSaveTokensAsync(user);
     }
 
-    public async Task<LoginResponse> RefreshTokenAsync(string refreshToken)
+    public async Task<AuthResponse> RefreshTokenAsync(string refreshToken, string userId)
     {
-        // In a real application, you would validate the refresh token
-        // and retrieve the user associated with it
-        throw new NotImplementedException("Refresh token logic needs to be implemented");
+        if (!Guid.TryParse(userId, out var userGuid))
+        {
+            throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
+        }
+
+        var user = await _userRepository.GetByIdAsync(userGuid)
+            ?? throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
+
+        // Validate refresh token
+        if (user.RefreshToken != refreshToken)
+        {
+            throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
+        }
+
+        // Check if refresh token has expired
+        if (user.RefreshTokenExpiry == null || user.RefreshTokenExpiry <= DateTime.UtcNow)
+        {
+            throw new UnauthorizedException(ErrorMessages.TokenExpired, ErrorCodes.AuthTokenExpired);
+        }
+
+        // Generate new tokens
+        return await GenerateAndSaveTokensAsync(user);
     }
 
-    public Task LogoutAsync()
+    public async Task LogoutAsync()
     {
-        // In a real application, you would invalidate the refresh token
-        return Task.CompletedTask;
+        var userId = _currentUserService.UserId;
+        if (userId == null)
+        {
+            return;
+        }
+
+        var user = await _userRepository.GetByIdAsync(userId.Value);
+        if (user != null)
+        {
+            // Invalidate refresh token
+            user.RefreshToken = null;
+            user.RefreshTokenExpiry = null;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+        }
     }
 
-    private LoginResponse GenerateLoginResponse(User user)
+    private async Task<AuthResponse> GenerateAndSaveTokensAsync(User user)
     {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"]!;
-        var issuer = jwtSettings["Issuer"]!;
-        var audience = jwtSettings["Audience"]!;
-        var expiryInMinutes = int.Parse(jwtSettings["ExpiryInMinutes"] ?? "60");
+        var secretKey = _jwtSettings.SecretKey;
+        var issuer = _jwtSettings.Issuer;
+        var audience = _jwtSettings.Audience;
+        var expiryInMinutes = _jwtSettings.ExpiryInMinutes;
 
         var accessToken = JwtHelper.GenerateToken(
             user.Id,
@@ -95,10 +137,20 @@ public class AuthService : IAuthService
             audience,
             expiryInMinutes);
 
-        return new LoginResponse
+        // Generate refresh token and set expiry (7 days)
+        var refreshToken = Guid.NewGuid().ToString();
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        // Update user with new refresh token
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiry = refreshTokenExpiry;
+        user.UpdatedAt = DateTime.UtcNow;
+        await _userRepository.UpdateAsync(user);
+
+        return new AuthResponse
         {
             AccessToken = accessToken,
-            RefreshToken = Guid.NewGuid().ToString(),
+            RefreshToken = refreshToken,
             ExpiresAt = DateTime.UtcNow.AddMinutes(expiryInMinutes),
             User = new UserInfo
             {
@@ -108,15 +160,5 @@ public class AuthService : IAuthService
                 Role = user.Role.ToString()
             }
         };
-    }
-
-    private static string HashPassword(string password)
-    {
-        return BCrypt.Net.BCrypt.HashPassword(password);
-    }
-
-    private static bool VerifyPassword(string password, string passwordHash)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, passwordHash);
     }
 }

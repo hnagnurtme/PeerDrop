@@ -1,0 +1,75 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: peerdrop-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: peerdrop
+      POSTGRES_PASSWORD: peerdrop_password
+      POSTGRES_DB: peerdrop_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - peerdrop-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U peerdrop -d peerdrop_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (.NET)
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    container_name: peerdrop-backend
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=peerdrop_db;Username=peerdrop;Password=peerdrop_password
+      - JwtSettings__SecretKey=your-secret-key-min-32-characters-long-for-security
+      - JwtSettings__Issuer=PeerDrop
+      - JwtSettings__Audience=PeerDrop
+      - JwtSettings__ExpiryInMinutes=60
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - peerdrop-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: peerdrop-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - peerdrop-network
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  peerdrop-network:
+    driver: bridge

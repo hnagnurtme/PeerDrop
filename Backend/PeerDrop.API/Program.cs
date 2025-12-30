@@ -1,6 +1,11 @@
+using Microsoft.AspNetCore.Mvc;
 using PeerDrop.API;
 using PeerDrop.API.Filters;
 using PeerDrop.API.Middlewares;
+using PeerDrop.BLL;
+using PeerDrop.DAL;
+using PeerDrop.Shared;
+using PeerDrop.Shared.Responses;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,12 +13,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<ValidationFilter>();
+})
+.ConfigureApiBehaviorOptions(options =>
+{
+    options.SuppressModelStateInvalidFilter = true;
 });
 
 builder.Services.AddEndpointsApiExplorer();
 
-// Add custom services
-builder.Services.AddApiServices(builder.Configuration);
+// Add custom services from all layers
+builder.Services.AddSharedLayer(builder.Configuration);
+builder.Services.AddDataAccessLayer(builder.Configuration);
+builder.Services.AddBusinessLogicLayer();
+builder.Services.AddApiServices();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSwaggerDocumentation();
 
@@ -30,15 +42,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// // Configure the HTTP request pipeline
-// if (app.Environment.IsDevelopment())
-// {
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "PeerDrop API v1");
-    });
-// }
+
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "PeerDrop API v1");
+});
 
 app.UseMiddleware<ExceptionMiddleware>();
 
