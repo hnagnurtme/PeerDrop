@@ -2,6 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes slide-in-right {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+}
+
 @layer base {
     :root {
         font-family: 'Space Grotesk', sans-serif;
@@ -21,6 +37,7 @@
 }
 
 @layer components {
+
     /* Neo-Brutalist Shadow Utilities */
     .shadow-neo-sm {
         box-shadow: 3px 3px 0px 0px #000000;
@@ -59,11 +76,13 @@
 }
 
 @layer utilities {
+
     /* Custom Animations */
     @keyframes radar-spin {
         from {
             transform: rotate(0deg);
         }
+
         to {
             transform: rotate(360deg);
         }
@@ -78,6 +97,7 @@
         0% {
             transform: translateX(100%);
         }
+
         100% {
             transform: translateX(-100%);
         }

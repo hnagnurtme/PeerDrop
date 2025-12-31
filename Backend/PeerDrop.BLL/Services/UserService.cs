@@ -38,7 +38,9 @@ public class UserService(IUserRepository userRepository, IMapper mapper) : IUser
         var user = await userRepository.GetByIdAsync(id)
             ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
 
+        user.UserName = userDto.UserName;
         user.FullName = userDto.FullName;
+        user.Avatar = userDto.Avatar;
         user.UpdatedAt = DateTime.UtcNow;
 
         var updatedUser = await userRepository.UpdateAsync(user);

@@ -24,7 +24,7 @@ export function useAuth () {
             clearError();
 
             const response = await authService.login( data );
-            storeLogin( response.user, response.token );
+            storeLogin( response.user, response.accessToken );
             navigate( '/' );
 
             return response;
@@ -44,7 +44,7 @@ export function useAuth () {
 
             const { confirmPassword, ...signupData } = data;
             const response = await authService.signup( signupData );
-            storeLogin( response.user, response.token );
+            storeLogin( response.user, response.accessToken );
             navigate( '/' );
 
             return response;

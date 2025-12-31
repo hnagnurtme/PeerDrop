@@ -6,7 +6,8 @@ import CyberBranding from './CyberBranding';
 import InputField from '@/shared/components/InputField';
 
 interface SignupData {
-    username: string;
+    userName: string;
+    fullName: string;
     email: string;
     password: string;
 }
@@ -18,7 +19,8 @@ interface SignupProps {
 
 const SignupForm: React.FC<SignupProps> = ( { onSignup, onBackToLogin } ) => {
     const [ formData, setFormData ] = useState( {
-        username: '',
+        userName: '',
+        fullName: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -28,12 +30,13 @@ const SignupForm: React.FC<SignupProps> = ( { onSignup, onBackToLogin } ) => {
 
     const handleSubmit = ( e: React.FormEvent ) => {
         e.preventDefault();
-        if ( !formData.username.trim() || !formData.email.trim() || !formData.password.trim() ) return;
+        if ( !formData.userName.trim() || !formData.fullName.trim() || !formData.email.trim() || !formData.password.trim() ) return;
         if ( formData.password !== formData.confirmPassword ) return;
 
         setIsRegistering( true );
         onSignup( {
-            username: formData.username,
+            userName: formData.userName,
+            fullName: formData.fullName,
             email: formData.email,
             password: formData.password
         } );
@@ -69,9 +72,21 @@ const SignupForm: React.FC<SignupProps> = ( { onSignup, onBackToLogin } ) => {
                                 icon={ <Icons.Badge /> }
                                 required
                                 placeholder="e.g. johndoe"
-                                value={ formData.username }
-                                onChange={ e => setFormData( { ...formData, username: e.target.value } ) }
-                                helperText="Your display name (min 3 characters)"
+                                value={ formData.userName }
+                                onChange={ e => setFormData( { ...formData, userName: e.target.value } ) }
+                                helperText="Your username (3-20 characters, letters, numbers, underscores)"
+                            />
+                        </div>
+
+                        <div className="md:col-span-2">
+                            <InputField
+                                label="Full Name"
+                                icon={ <Icons.Badge /> }
+                                required
+                                placeholder="e.g. John Doe"
+                                value={ formData.fullName }
+                                onChange={ e => setFormData( { ...formData, fullName: e.target.value } ) }
+                                helperText="Your full name"
                             />
                         </div>
 

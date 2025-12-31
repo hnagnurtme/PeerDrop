@@ -53,7 +53,7 @@ public class AuthService : IAuthService
         return await GenerateAndSaveTokensAsync(user);
     }
 
-    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName)
+    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName, string userName)
     {
         if (await _userRepository.EmailExistsAsync(email))
         {
@@ -64,6 +64,7 @@ public class AuthService : IAuthService
         {
             Id = Guid.NewGuid(),
             Email = email,
+            UserName = userName,
             PasswordHash = _hashService.Hash(password),
             FullName = fullName,
             Role = UserRole.User,
@@ -156,8 +157,10 @@ public class AuthService : IAuthService
             {
                 Id = user.Id,
                 Email = user.Email,
+                UserName = user.UserName,
                 FullName = user.FullName,
-                Role = user.Role.ToString()
+                Role = user.Role.ToString(),
+                Avatar = user.Avatar
             }
         };
     }

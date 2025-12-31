@@ -11,7 +11,9 @@ const mockUsers: Map<string, { user: User; password: string }> = new Map( [
         user: {
             id: '1',
             email: 'demo@pixelport.sys',
-            username: 'AGENT_DEMO',
+            userName: 'AGENT_DEMO',
+            fullName: 'Demo Agent',
+            role: 'User',
             avatar: undefined,
         },
         password: 'Demo123'
@@ -20,7 +22,9 @@ const mockUsers: Map<string, { user: User; password: string }> = new Map( [
         user: {
             id: '2',
             email: 'admin@pixelport.sys',
-            username: 'ADMIN_NODE',
+            userName: 'ADMIN_NODE',
+            fullName: 'Admin Node',
+            role: 'Admin',
             avatar: undefined,
         },
         password: 'Admin123'
@@ -59,9 +63,10 @@ export const mockAuthService = {
         }
 
         return {
-            user: stored.user,
-            token: generateToken( stored.user.id ),
-            message: 'Login successful'
+            accessToken: generateToken( stored.user.id ),
+            refreshToken: generateToken( stored.user.id ),
+            expiresAt: new Date( Date.now() + 24 * 60 * 60 * 1000 ).toISOString(),
+            user: stored.user
         };
     },
 
@@ -75,7 +80,9 @@ export const mockAuthService = {
         const newUser: User = {
             id: generateId(),
             email: data.email.toLowerCase(),
-            username: data.username.toUpperCase(),
+            userName: data.userName,
+            fullName: data.fullName,
+            role: 'User',
             avatar: undefined,
         };
 
@@ -85,9 +92,10 @@ export const mockAuthService = {
         } );
 
         return {
-            user: newUser,
-            token: generateToken( newUser.id ),
-            message: 'Account created successfully'
+            accessToken: generateToken( newUser.id ),
+            refreshToken: generateToken( newUser.id ),
+            expiresAt: new Date( Date.now() + 24 * 60 * 60 * 1000 ).toISOString(),
+            user: newUser
         };
     },
 
