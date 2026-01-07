@@ -25,4 +25,9 @@ public static class ErrorMessages
     public const string InternalServerError = "An internal server error occurred.";
     public const string NotFound = "The requested resource was not found.";
     public const string BadRequest = "Invalid request.";
+    
+    // File
+    public const string FileTooLarge = "File is too large.";
+    public const string CloudStorageUnauthorized = "Unauthorized access to cloud storage.";
+    public const  string CloudStorageForbidden = "Cloud storage forbidden.";
 }

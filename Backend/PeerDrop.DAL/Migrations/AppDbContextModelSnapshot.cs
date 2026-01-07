@@ -31,6 +31,9 @@ namespace PeerDrop.DAL.Migrations
                     b.Property<string>("Avatar")
                         .HasColumnType("text");
 
+                    b.Property<string>("AvatarPublicId")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 

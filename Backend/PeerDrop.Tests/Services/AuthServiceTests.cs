@@ -44,6 +44,7 @@ public class AuthServiceTests
             _jwtSettings,
             _hashServiceMock.Object,
             _currentUserServiceMock.Object
+            
         );
     }
 

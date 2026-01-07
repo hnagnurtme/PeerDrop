@@ -26,4 +26,9 @@ public static class ErrorCodes
     public const string InternalServerError = "GEN_INTERNAL_SERVER_ERROR";
     public const string NotFound = "GEN_NOT_FOUND";
     public const string BadRequest = "GEN_BAD_REQUEST";
+    
+    // File (FILE)
+    public const string FileTooLarge = "FILE_TOO_LARGE";
+    public const string CloudStorageUnauthorized = "CLOUD_STORAGE_UNAUTHORIZED";
+    public  const string CloudStorageForbidden = "CLOUD_STORAGE_FORBRED";
 }

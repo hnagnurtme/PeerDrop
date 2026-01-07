@@ -1,7 +1,7 @@
 using AutoMapper;
 using PeerDrop.BLL.Models;
 using PeerDrop.DAL.Entities;
-using PeerDrop.Shared.DTOs;
+using PeerDrop.Shared.DTOs.User;
 
 namespace PeerDrop.BLL.Mapping;
 

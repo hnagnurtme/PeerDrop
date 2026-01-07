@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PeerDrop.BLL.Interfaces.Services;
-using PeerDrop.Shared.DTOs;
+using PeerDrop.Shared.DTOs.User;
 using PeerDrop.Shared.Responses;
 
 namespace PeerDrop.API.Controllers;
 
 [Authorize]
-public class UserController(IUserService userService) : BaseApiController
+public class UserController(IUserService userService , ICurrentUserService currentUserService) : BaseApiController
 {
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IEnumerable<UserResponse>>>> GetAllUsers()
@@ -43,4 +44,19 @@ public class UserController(IUserService userService) : BaseApiController
         await userService.DeleteUserAsync(id);
         return NoContentResponse();
     }
+
+    [HttpPost("avatar")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<ApiResponse<UserResponse>>> UploadAvatar([FromForm] IFormFile avatar)
+    {
+        Guid? currentUserId = currentUserService.UserId;
+        if (currentUserId == null)
+        {
+            return Unauthorized("User not authenticated");
+        }
+
+        var user = await userService.UploadAvatarAsync(currentUserId, avatar);
+        return OkResponse(user, "Avatar uploaded successfully");
+    }
+
 }

@@ -1,4 +1,4 @@
-namespace PeerDrop.Shared.DTOs;
+namespace PeerDrop.Shared.DTOs.User;
 
 public class UserResponse
 {
