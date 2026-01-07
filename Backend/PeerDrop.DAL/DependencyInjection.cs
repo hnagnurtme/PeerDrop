@@ -10,9 +10,14 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddDataAccessLayer(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add DbContext (PostgreSQL)
+        // Add DbContext (PostgreSQL) với MigrationsHistoryTable
         services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(
+                configuration.GetConnectionString("DefaultConnection"),
+                o => o.MigrationsHistoryTable("__EFMigrationsHistory", "public")
+            )
+        );
+
 
         // Add Repositories
         services.AddScoped<IUserRepository, UserRepository>();

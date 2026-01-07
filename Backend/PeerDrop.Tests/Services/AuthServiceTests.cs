@@ -19,7 +19,6 @@ public class AuthServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IHashService> _hashServiceMock;
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
-    private readonly Mock<IMapper> _mapperMock;
     private readonly IOptions<JwtSettings> _jwtSettings;
     private readonly AuthService _authService;
 
@@ -28,7 +27,6 @@ public class AuthServiceTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _hashServiceMock = new Mock<IHashService>();
         _currentUserServiceMock = new Mock<ICurrentUserService>();
-        _mapperMock = new Mock<IMapper>();
         
         _jwtSettings = Options.Create(new JwtSettings
         {
@@ -40,11 +38,9 @@ public class AuthServiceTests
 
         _authService = new AuthService(
             _userRepositoryMock.Object,
-            _mapperMock.Object,
             _jwtSettings,
             _hashServiceMock.Object,
             _currentUserServiceMock.Object
-            
         );
     }
 

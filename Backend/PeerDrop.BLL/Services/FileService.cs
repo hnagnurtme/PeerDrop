@@ -1,6 +1,3 @@
-using System.Net;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Http;
 using PeerDrop.BLL.Exceptions;
 using PeerDrop.BLL.Interfaces.Services;
@@ -9,59 +6,36 @@ using PeerDrop.Shared.DTOs.Files;
 
 namespace PeerDrop.BLL.Services;
 
-public class FileService(Cloudinary cloudinary) : IFileService
+public class FileService(IFileStorageService fileStorageService) : IFileService
 {
 
-    public async Task<FileResponse> UploadFileAsync(IFormFile file)
+    public async Task<FileResponse> UploadFileAsync(IFormFile file,CancellationToken cancellationToken = default)
     {
-        await  ValidateFile(file);
+        ValidateFile(file);
 
         await using var stream = file.OpenReadStream();
-
-        var uploadParams = new AutoUploadParams
-        {
-            File = new FileDescription(file.FileName, stream),
-            Folder = "peerdrop",
-            UseFilename = true,
-            UniqueFilename = true,
-            Overwrite = false,
-        };
         
-        var uploadResult = await cloudinary.UploadAsync(uploadParams);
-
-        if (uploadResult.StatusCode != HttpStatusCode.OK)
-        {
-            throw new Exception(uploadResult.Error.ToString());
-        }
-
-        return new FileResponse
-        {
-            PublicId = uploadResult.PublicId,
-            SecureUrl  = uploadResult.SecureUrl?.ToString() ?? string.Empty
-        };
+        return await fileStorageService.UploadAsync(stream, file.FileName, file.ContentType, cancellationToken);
     }
     
-    public async Task<bool> DeleteFileByPublicIdAsync(string publicId)
+    public async Task<bool> DeleteFileByPublicIdAsync(string publicId,CancellationToken cancellationToken = default)
     {
         if(string.IsNullOrWhiteSpace(publicId))
         {
             return false;
         }
-        var deleteParams = new DeletionParams(publicId)
-        {
-            ResourceType = ResourceType.Auto
-        };
-
-        var result = await  cloudinary.DestroyAsync(deleteParams);
-        return result.Result is "ok" or "not found";
+        return await fileStorageService.DeleteAsync(publicId, cancellationToken);
     }
 
-    private static Task ValidateFile(IFormFile file)
+    private static void ValidateFile(IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
-            throw new BusinessException(ErrorMessages.CloudStorageForbidden, ErrorCodes.CloudStorageForbidden);
+            throw new BusinessException(ErrorMessages.InvalidFile, ErrorCodes.InvalidFile);
         }
-        return file.Length > 1024 * 1024 * 10 ? throw new FileTooLargeException(ErrorMessages.FileTooLarge, ErrorCodes.FileTooLarge) : Task.CompletedTask;
+        if (file.Length > ProjectConstants.FileUpload.MaxFileSizeBytes)
+        {
+            throw new FileTooLargeException(ErrorMessages.FileTooLarge, ErrorCodes.FileTooLarge);
+        }
     }
 }

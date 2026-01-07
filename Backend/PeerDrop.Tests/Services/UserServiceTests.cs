@@ -2,10 +2,12 @@ using FluentAssertions;
 using AutoMapper;
 using Moq;
 using PeerDrop.BLL.Exceptions;
+using PeerDrop.BLL.Interfaces.Services;
 using PeerDrop.BLL.Services;
 using PeerDrop.DAL.Entities;
 using PeerDrop.DAL.Repositories;
 using PeerDrop.Shared.Constants;
+using PeerDrop.Shared.DTOs.User;
 using PeerDrop.Shared.Enums;
 using Xunit;
 
@@ -15,13 +17,15 @@ public class UserServiceTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IMapper> _mapperMock;
+    private readonly Mock<IFileService> _fileServiceMock;
     private readonly UserService _userService;
 
     public UserServiceTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _mapperMock = new Mock<IMapper>();
-        _userService = new UserService(_userRepositoryMock.Object, _mapperMock.Object);
+        _fileServiceMock = new Mock<IFileService>();
+        _userService = new UserService(_userRepositoryMock.Object, _mapperMock.Object, _fileServiceMock.Object);
     }
 
     #region GetAllUsersAsync Tests
@@ -36,7 +40,7 @@ public class UserServiceTests
             new() { Id = Guid.NewGuid(), Email = "user2@example.com", FullName = "User 2", Role = UserRole.Admin }
         };
 
-        var userResponses = new List<PeerDrop.Shared.DTOs.UserResponse>
+        var userResponses = new List<UserResponse>
         {
             new() { Id = users[0].Id, Email = "user1@example.com", FullName = "User 1", Role = "User" },
             new() { Id = users[1].Id, Email = "user2@example.com", FullName = "User 2", Role = "Admin" }
@@ -45,7 +49,7 @@ public class UserServiceTests
         _userRepositoryMock.Setup(x => x.GetAllAsync())
             .ReturnsAsync(users);
         
-        _mapperMock.Setup(x => x.Map<IEnumerable<PeerDrop.Shared.DTOs.UserResponse>>(users))
+        _mapperMock.Setup(x => x.Map<IEnumerable<UserResponse>>(users))
             .Returns(userResponses);
 
         // Act
@@ -74,7 +78,7 @@ public class UserServiceTests
             Role = UserRole.User
         };
 
-        var userResponse = new PeerDrop.Shared.DTOs.UserResponse
+        var userResponse = new UserResponse
         {
             Id = userId,
             Email = "test@example.com",
@@ -85,7 +89,7 @@ public class UserServiceTests
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
             .ReturnsAsync(user);
         
-        _mapperMock.Setup(x => x.Map<PeerDrop.Shared.DTOs.UserResponse>(user))
+        _mapperMock.Setup(x => x.Map<UserResponse>(user))
             .Returns(userResponse);
 
         // Act
@@ -130,7 +134,7 @@ public class UserServiceTests
             Role = UserRole.User
         };
 
-        var userResponse = new PeerDrop.Shared.DTOs.UserResponse
+        var userResponse = new UserResponse
         {
             Id = user.Id,
             Email = email,
@@ -141,7 +145,7 @@ public class UserServiceTests
         _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
             .ReturnsAsync(user);
         
-        _mapperMock.Setup(x => x.Map<PeerDrop.Shared.DTOs.UserResponse>(user))
+        _mapperMock.Setup(x => x.Map<UserResponse>(user))
             .Returns(userResponse);
 
         // Act
@@ -193,7 +197,7 @@ public class UserServiceTests
             Role = UserRole.User
         };
         
-        var updatedData = new PeerDrop.Shared.DTOs.UserResponse
+        var updatedData = new UserResponse
         {
             Id = userId,
             Email = "new@example.com",
@@ -201,7 +205,7 @@ public class UserServiceTests
             Role = "User"
         };
 
-        var updatedResponse = new PeerDrop.Shared.DTOs.UserResponse
+        var updatedResponse = new UserResponse
         {
             Id = userId,
             Email = "new@example.com",
@@ -213,7 +217,7 @@ public class UserServiceTests
             .ReturnsAsync(existingUser);
         _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
             .ReturnsAsync(updatedUser);
-        _mapperMock.Setup(x => x.Map<PeerDrop.Shared.DTOs.UserResponse>(It.IsAny<User>()))
+        _mapperMock.Setup(x => x.Map<UserResponse>(It.IsAny<User>()))
             .Returns(updatedResponse);
 
         // Act
@@ -232,7 +236,7 @@ public class UserServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var updatedData = new PeerDrop.Shared.DTOs.UserResponse
+        var updatedData = new UserResponse
         {
             Id = userId,
             Email = "new@example.com",
