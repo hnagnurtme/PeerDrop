@@ -23,9 +23,9 @@ public class AuthService(
     private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
 
-    public async Task<AuthResponse> LoginAsync(string email, string password)
+    public async Task<AuthResponse> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
     {
-        var user = await userRepository.GetByEmailAsync(email)
+        var user = await userRepository.GetByEmailAsync(email, cancellationToken)
             ?? throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
 
         if (!hashService.Verify(password, user.PasswordHash))
@@ -38,12 +38,12 @@ public class AuthService(
             throw new UnauthorizedException(ErrorMessages.AccountDisabled, ErrorCodes.AuthAccountDisabled);
         }
 
-        return await GenerateAndSaveTokensAsync(user);
+        return await GenerateAndSaveTokensAsync(user, cancellationToken);
     }
 
-    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName, string userName)
+    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName, string userName, CancellationToken cancellationToken = default)
     {
-        if (await userRepository.EmailExistsAsync(email))
+        if (await userRepository.EmailExistsAsync(email, cancellationToken))
         {
             throw new UnprocessableEntityException(ErrorMessages.EmailAlreadyExists, ErrorCodes.AuthEmailAlreadyExists);
         }
@@ -60,19 +60,19 @@ public class AuthService(
             CreatedAt = DateTime.UtcNow
         };
 
-        await userRepository.CreateAsync(user);
+        await userRepository.CreateAsync(user, cancellationToken);
 
-        return await GenerateAndSaveTokensAsync(user);
+        return await GenerateAndSaveTokensAsync(user, cancellationToken);
     }
 
-    public async Task<AuthResponse> RefreshTokenAsync(string refreshToken, string userId)
+    public async Task<AuthResponse> RefreshTokenAsync(string refreshToken, string userId, CancellationToken cancellationToken = default)
     {
         if (!Guid.TryParse(userId, out var userGuid))
         {
             throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
         }
 
-        var user = await userRepository.GetByIdAsync(userGuid)
+        var user = await userRepository.GetByIdAsync(userGuid, cancellationToken)
             ?? throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
 
         // Validate refresh token
@@ -88,10 +88,10 @@ public class AuthService(
         }
 
         // Generate new tokens
-        return await GenerateAndSaveTokensAsync(user);
+        return await GenerateAndSaveTokensAsync(user, cancellationToken);
     }
 
-    public async Task LogoutAsync()
+    public async Task LogoutAsync(CancellationToken cancellationToken = default)
     {
         var userId = currentUserService.UserId;
         if (userId == null)
@@ -99,18 +99,18 @@ public class AuthService(
             return;
         }
 
-        var user = await userRepository.GetByIdAsync(userId.Value);
+        var user = await userRepository.GetByIdAsync(userId.Value, cancellationToken);
         if (user != null)
         {
             // Invalidate refresh token
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
             user.UpdatedAt = DateTime.UtcNow;
-            await userRepository.UpdateAsync(user);
+            await userRepository.UpdateAsync(user, cancellationToken);
         }
     }
 
-    async private Task<AuthResponse> GenerateAndSaveTokensAsync(User user)
+    async private Task<AuthResponse> GenerateAndSaveTokensAsync(User user, CancellationToken cancellationToken = default)
     {
         var secretKey = _jwtSettings.SecretKey;
         var issuer = _jwtSettings.Issuer;
@@ -134,7 +134,7 @@ public class AuthService(
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiry = refreshTokenExpiry;
         user.UpdatedAt = DateTime.UtcNow;
-        await userRepository.UpdateAsync(user);
+        await userRepository.UpdateAsync(user, cancellationToken);
 
         return new AuthResponse
         {

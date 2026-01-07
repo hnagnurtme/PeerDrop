@@ -8,86 +8,92 @@ using PeerDrop.Shared.DTOs.User;
 
 namespace PeerDrop.BLL.Services;
 
-public class UserService(IUserRepository userRepository, IMapper mapper, IFileService fileService) : IUserService
+public class UserService(IUserRepository userRepository, IMapper mapper, IFileService fileService, ICurrentUserService currentUserService) : IUserService
 {
 
-    public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserResponse>> GetAllUsersAsync(CancellationToken cancellationToken = default)
     {
-        var users = await userRepository.GetAllAsync();
+        var users = await userRepository.GetAllAsync(cancellationToken);
         return mapper.Map<IEnumerable<UserResponse>>(users);
     }
 
-    public async Task<UserResponse> GetUserByIdAsync(Guid id)
+    public async Task<UserResponse> GetUserByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var user = await userRepository.GetByIdAsync(id)
+        var user = await userRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
 
         return mapper.Map<UserResponse>(user);
     }
 
-    public async Task<UserResponse> GetUserByEmailAsync(string email)
+    public async Task<UserResponse> GetUserByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        var user = await userRepository.GetByEmailAsync(email)
+        var user = await userRepository.GetByEmailAsync(email, cancellationToken)
             ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
 
         return mapper.Map<UserResponse>(user);
     }
 
-    public async Task<UserResponse> UpdateUserAsync(Guid id, UserResponse userDto)
+    public async Task<UserResponse> UpdateUserAsync(Guid id, UpdateUserRequest updateRequest, CancellationToken cancellationToken = default)
     {
-        var user = await userRepository.GetByIdAsync(id)
+        var user = await userRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
 
-        user.UserName = userDto.UserName;
-        user.FullName = userDto.FullName;
-        user.Avatar = userDto.Avatar;
+        user.UserName = updateRequest.UserName;
+        user.FullName = updateRequest.FullName;
         user.UpdatedAt = DateTime.UtcNow;
 
-        var updatedUser = await userRepository.UpdateAsync(user);
+        var updatedUser = await userRepository.UpdateAsync(user, cancellationToken);
         return mapper.Map<UserResponse>(updatedUser);
     }
 
-    public async Task<UserResponse> UploadAvatarAsync(Guid? id, IFormFile avatar)
+    public async Task<UserResponse> UploadAvatarAsync(IFormFile avatar, CancellationToken cancellationToken = default)
     {
-        var user = await userRepository.GetByIdAsync(id)
+        var currentUserId = currentUserService.UserId!.Value;
+        var user = await userRepository.GetByIdAsync(currentUserId, cancellationToken)
                    ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
         await  ValidateFile(avatar);
         
-        var avatarResposne = await fileService.UploadFileAsync(avatar);
+        var avatarResposne = await fileService.UploadFileAsync(avatar, cancellationToken);
 
         if (user.AvatarPublicId != null)
         {
-            await fileService.DeleteFileByPublicIdAsync(user.AvatarPublicId);
+            await fileService.DeleteFileByPublicIdAsync(user.AvatarPublicId, cancellationToken);
         }
         
         user.Avatar = avatarResposne.SecureUrl;
         user.AvatarPublicId = avatarResposne.PublicId;
         user.UpdatedAt = DateTime.UtcNow;
 
-        var updatedUser = await userRepository.UpdateAsync(user);
+        var updatedUser = await userRepository.UpdateAsync(user, cancellationToken);
         return mapper.Map<UserResponse>(updatedUser);
     }
 
     private static Task ValidateFile(IFormFile file)
     {
-        if (file.Length > 5000000)
+        if (file == null || file.Length == 0)
+        {
+            throw new BusinessException(ErrorMessages.BadRequest, ErrorCodes.BadRequest);
+        }
+        
+        if (file.Length > ProjectConstants.FileUpload.MaxAvatarSizeBytes)
         {
             throw new FileTooLargeException(ErrorMessages.FileTooLarge, ErrorCodes.FileTooLarge);
         }
         
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-        return !allowedExtensions.Contains(extension) ? throw new BusinessException(ErrorMessages.BadRequest, ErrorCodes.BadRequest) : Task.CompletedTask;
+        return !ProjectConstants.FileUpload.AllowedAvatarExtensions.Contains(extension) 
+            ? throw new BusinessException(ErrorMessages.BadRequest, ErrorCodes.BadRequest) 
+            : Task.CompletedTask;
     }
 
-    public async Task<bool> DeleteUserAsync(Guid id)
+    public async Task<bool> DeleteUserAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        if (!await userRepository.ExistsAsync(id))
+        if (!await userRepository.ExistsAsync(id, cancellationToken))
         {
             throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
         }
 
-        return await userRepository.DeleteAsync(id);
+        return await userRepository.DeleteAsync(id, cancellationToken);
     }
 }

@@ -8,7 +8,7 @@ using PeerDrop.BLL.ExternalServices;
 using PeerDrop.BLL.Interfaces.Services;
 using PeerDrop.BLL.Mapping;
 using PeerDrop.BLL.Services;
-using PeerDrop.BLL.Validators;
+using PeerDrop.BLL.Validators.Auth;
 using PeerDrop.Shared.Constants;
 
 namespace PeerDrop.BLL;

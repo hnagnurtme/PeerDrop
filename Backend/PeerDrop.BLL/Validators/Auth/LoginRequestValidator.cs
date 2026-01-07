@@ -1,7 +1,7 @@
 using FluentValidation;
 using PeerDrop.Shared.DTOs.Auth;
 
-namespace PeerDrop.BLL.Validators;
+namespace PeerDrop.BLL.Validators.Auth;
 
 public class LoginRequestValidator : AbstractValidator<LoginRequest>
 {

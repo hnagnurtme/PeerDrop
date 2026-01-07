@@ -4,15 +4,17 @@ using PeerDrop.Shared.Responses;
 namespace PeerDrop.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+[Produces("application/json")]
 public abstract class BaseApiController : ControllerBase
 {
-    protected ActionResult<ApiResponse<T>> OkResponse<T>(T data, string message = "Success")
+    protected ActionResult<ApiResponse<T>> OkResponse<T>(T data, string message)
     {
         return Ok(ApiResponse<T>.Success(data, message));
     }
     
-    protected ActionResult<ApiResponse<T>> CreatedResponse<T>(T data, string message = "Created successfully")
+    protected ActionResult<ApiResponse<T>> CreatedResponse<T>(T data, string message)
     {
         return StatusCode(201, ApiResponse<T>.Success(data, message));
     }
@@ -30,5 +32,10 @@ public abstract class BaseApiController : ControllerBase
     protected ActionResult<ApiResponse<T>> NotFoundResponse<T>(string message, string? errorCode = null)
     {
         return NotFound(ApiResponse<T>.Fail(message, errorCode: errorCode));
+    }
+    
+    protected ActionResult UnauthorizedResponse(string message)
+    {
+        return Unauthorized(ApiResponse<object>.Fail(message));
     }
 }

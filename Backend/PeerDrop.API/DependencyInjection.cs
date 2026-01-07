@@ -1,25 +1,125 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PeerDrop.API.Filters;
+using PeerDrop.Shared.Constants;
 
 namespace PeerDrop.API;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApiServices(this IServiceCollection services)
+    public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add Filters
+        services.AddApiVersioningAndExplorer();
+
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<ValidationFilter>();
+        })
+        .ConfigureApiBehaviorOptions(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
+        
+        services.AddEndpointsApiExplorer();
         services.AddScoped<ValidationFilter>();
+        services.AddAntiforgery();
+
+        services.AddJwtAuthentication(configuration)
+                .AddSwaggerDocumentation()
+                .AddApiCors(configuration);
 
         return services;
     }
 
-    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddApiVersioningAndExplorer(this IServiceCollection services)
+    {
+        services.AddApiVersioning(options =>
+        {
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+            options.ApiVersionReader = ApiVersionReader.Combine(
+                new QueryStringApiVersionReader("api-version"),
+                new HeaderApiVersionReader("x-api-version")
+            );
+        });
+
+        services.AddVersionedApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = true;
+            options.AssumeDefaultVersionWhenUnspecified = true;
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "PeerDrop API",
+                Version = "v1",
+                Description = "RESTful API for PeerDrop - Secure file sharing platform with real-time collaboration",
+                Contact = new OpenApiContact
+                {
+                    Name = "PeerDrop Team",
+                    Email = "support@peerdrop.com",
+                    Url = new Uri("https://github.com/hnagnurtme/PeerDrop")
+                },
+                License = new OpenApiLicense
+                {
+                    Name = "MIT License",
+                    Url = new Uri("https://opensource.org/licenses/MIT")
+                }
+            });
+
+            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token."
+            });
+
+            options.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+
+            options.OperationFilter<RemoveVersionParameterFilter>();
+            options.OperationFilter<StandardResponseTypesFilter>();
+            options.DocumentFilter<ReplaceVersionWithValueFilter>();
+            options.DocInclusionPredicate((version, apiDesc) => true);
+            options.EnableAnnotations();
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured");
+        var secretKey = jwtSettings["SecretKey"] 
+                        ?? throw new InvalidOperationException("JWT SecretKey is not configured");
 
         services.AddAuthentication(options =>
         {
@@ -42,41 +142,26 @@ public static class DependencyInjection
 
         return services;
     }
-
-    public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
+    
+    private static IServiceCollection AddApiCors(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSwaggerGen(options =>
+        var productionOrigin = configuration.GetValue<string>("Cors:ProductionOrigin") 
+                               ?? throw new InvalidOperationException("Production CORS origin not configured");
+
+        services.AddCors(options =>
         {
-            options.SwaggerDoc("v1", new OpenApiInfo
+            options.AddPolicy(ProjectConstants.CorsConstants.AllowDevPolicy, policy =>
             {
-                Title = "PeerDrop API",
-                Version = "v1",
-                Description = "API documentation for PeerDrop"
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
             });
 
-            options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            options.AddPolicy(ProjectConstants.CorsConstants.AllowProductionPolicy, policy =>
             {
-                Name = "Authorization",
-                Type = SecuritySchemeType.Http,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                In = ParameterLocation.Header,
-                Description = "Enter 'Bearer' [space] and then your valid token"
-            });
-
-            options.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
+                policy.WithOrigins(productionOrigin)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
             });
         });
 
