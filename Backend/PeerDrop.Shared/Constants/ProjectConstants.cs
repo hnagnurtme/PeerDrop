@@ -14,7 +14,6 @@ public static class ProjectConstants
     }
     public static class CorsConstants
     {
-        public const string AllowAllPolicy = "AllowAll";     
         public const string AllowDevPolicy = "AllowDev";       
         public const string AllowProductionPolicy = "AllowProduction"; 
     }

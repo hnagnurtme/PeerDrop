@@ -10,6 +10,8 @@ public class AuthController(IAuthService authService) : BaseApiController
 {
     [HttpPost("login")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<AuthResponse>>> Login([FromBody] LoginRequest request)
     {
         var result = await authService.LoginAsync(request.Email, request.Password);
@@ -18,6 +20,8 @@ public class AuthController(IAuthService authService) : BaseApiController
 
     [HttpPost("register")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<AuthResponse>>> Register([FromBody] RegisterRequest request)
     {
         var result = await authService.RegisterAsync(request.Email, request.Password, request.FullName, request.UserName);
@@ -26,14 +30,18 @@ public class AuthController(IAuthService authService) : BaseApiController
 
     [HttpPost("refresh-token")]
     [AllowAnonymous]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<AuthResponse>>> RefreshToken([FromBody] RefreshTokenRequest request)
     {
-        var result = await authService.RefreshTokenAsync(request.RefreshToken , request.UserId);
+        var result = await authService.RefreshTokenAsync(request.RefreshToken, request.UserId);
         return OkResponse(result, "Token refreshed successfully");
     }
 
     [HttpPost("logout")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult> Logout()
     {
         await authService.LogoutAsync();

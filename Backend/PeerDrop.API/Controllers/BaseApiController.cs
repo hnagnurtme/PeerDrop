@@ -4,7 +4,9 @@ using PeerDrop.Shared.Responses;
 namespace PeerDrop.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+[Produces("application/json")]
 public abstract class BaseApiController : ControllerBase
 {
     protected ActionResult<ApiResponse<T>> OkResponse<T>(T data, string message = "Success")
