@@ -3,23 +3,44 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PeerDrop.API.Filters;
+using PeerDrop.Shared.Constants;
 
 namespace PeerDrop.API;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddApiServices(this IServiceCollection services)
+    public static IServiceCollection AddApiServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add Filters
+        // Controllers + validation + endpoints
+        services.AddControllers(options =>
+        {
+            options.Filters.Add<ValidationFilter>();
+        })
+        .ConfigureApiBehaviorOptions(options =>
+        {
+            options.SuppressModelStateInvalidFilter = true;
+        });
+        services.AddEndpointsApiExplorer();
+
+        // Filter registration
         services.AddScoped<ValidationFilter>();
+
+        // JWT, Swagger, CORS
+        services.AddJwtAuthentication(configuration)
+                .AddSwaggerDocumentation()
+                .AddApiCors(configuration);
+
+        // Antiforgery 
+        services.AddAntiforgery();
 
         return services;
     }
 
-    public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var jwtSettings = configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey is not configured");
+        var secretKey = jwtSettings["SecretKey"] 
+                        ?? throw new InvalidOperationException("JWT SecretKey is not configured");
 
         services.AddAuthentication(options =>
         {
@@ -43,7 +64,7 @@ public static class DependencyInjection
         return services;
     }
 
-    public static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
+    private static IServiceCollection AddSwaggerDocumentation(this IServiceCollection services)
     {
         services.AddSwaggerGen(options =>
         {
@@ -77,6 +98,31 @@ public static class DependencyInjection
                     },
                     Array.Empty<string>()
                 }
+            });
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddApiCors(this IServiceCollection services, IConfiguration configuration)
+    {
+        var productionOrigin = configuration.GetValue<string>("Cors:ProductionOrigin") 
+                               ?? throw new InvalidOperationException("Production CORS origin not configured");
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy(ProjectConstants.CorsConstants.AllowDevPolicy, policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            });
+
+            options.AddPolicy(ProjectConstants.CorsConstants.AllowProductionPolicy, policy =>
+            {
+                policy.WithOrigins(productionOrigin)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
             });
         });
 

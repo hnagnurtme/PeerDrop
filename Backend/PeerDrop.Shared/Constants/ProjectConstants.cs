@@ -12,4 +12,10 @@ public static class ProjectConstants
         public const string ResultOk = "ok";
         public const string ResultNotFound = "not found";
     }
+    public static class CorsConstants
+    {
+        public const string AllowAllPolicy = "AllowAll";     
+        public const string AllowDevPolicy = "AllowDev";       
+        public const string AllowProductionPolicy = "AllowProduction"; 
+    }
 }
