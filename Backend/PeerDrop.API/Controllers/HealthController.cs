@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
+using PeerDrop.API.Documentations;
 
 namespace PeerDrop.API.Controllers;
 
@@ -9,7 +11,7 @@ namespace PeerDrop.API.Controllers;
 public class HealthController : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [SwaggerOperation(Summary = HealthEndpoints.Check.Summary, Description = HealthEndpoints.Check.Description)]
     public IActionResult Get()
     {
         return Ok(new

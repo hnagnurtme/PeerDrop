@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using PeerDrop.API.Filters;
 using PeerDrop.Shared.Constants;
 
@@ -67,11 +66,17 @@ public static class DependencyInjection
             {
                 Title = "PeerDrop API",
                 Version = "v1",
-                Description = "PeerDrop API - File sharing platform",
+                Description = "RESTful API for PeerDrop - Secure file sharing platform with real-time collaboration",
                 Contact = new OpenApiContact
                 {
                     Name = "PeerDrop Team",
-                    Email = "support@peerdrop.com"
+                    Email = "support@peerdrop.com",
+                    Url = new Uri("https://github.com/hnagnurtme/PeerDrop")
+                },
+                License = new OpenApiLicense
+                {
+                    Name = "MIT License",
+                    Url = new Uri("https://opensource.org/licenses/MIT")
                 }
             });
 
@@ -82,7 +87,7 @@ public static class DependencyInjection
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
                 In = ParameterLocation.Header,
-                Description = "Enter 'Bearer' [space] and then your valid token"
+                Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token."
             });
 
             options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -101,6 +106,10 @@ public static class DependencyInjection
             });
 
             options.OperationFilter<RemoveVersionParameterFilter>();
+            options.OperationFilter<StandardResponseTypesFilter>();
+            options.DocumentFilter<ReplaceVersionWithValueFilter>();
+            options.DocInclusionPredicate((version, apiDesc) => true);
+            options.EnableAnnotations();
         });
 
         return services;
@@ -157,19 +166,5 @@ public static class DependencyInjection
         });
 
         return services;
-    }
-}
-
-public class RemoveVersionParameterFilter : IOperationFilter
-{
-    public void Apply(OpenApiOperation operation, OperationFilterContext context)
-    {
-        var versionParameter = operation.Parameters
-            .FirstOrDefault(p => p.Name == "version" || p.Name == "api-version");
-        
-        if (versionParameter != null)
-        {
-            operation.Parameters.Remove(versionParameter);
-        }
     }
 }

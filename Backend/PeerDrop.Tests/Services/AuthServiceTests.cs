@@ -62,11 +62,11 @@ public class AuthServiceTests
             IsActive = true
         };
 
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _hashServiceMock.Setup(x => x.Verify(password, user.PasswordHash))
             .Returns(true);
-        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -79,7 +79,7 @@ public class AuthServiceTests
         result.User.Email.Should().Be(email);
         result.User.FullName.Should().Be(user.FullName);
         
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -89,7 +89,7 @@ public class AuthServiceTests
         var email = "nonexistent@example.com";
         var password = "Password123";
 
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act & Assert
@@ -113,7 +113,7 @@ public class AuthServiceTests
             IsActive = true
         };
 
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _hashServiceMock.Setup(x => x.Verify(password, user.PasswordHash))
             .Returns(false);
@@ -139,7 +139,7 @@ public class AuthServiceTests
             IsActive = false
         };
 
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         _hashServiceMock.Setup(x => x.Verify(password, user.PasswordHash))
             .Returns(true);
@@ -164,13 +164,13 @@ public class AuthServiceTests
         var fullName = "New User";
         var userName = "newuser";
 
-        _userRepositoryMock.Setup(x => x.EmailExistsAsync(email))
+        _userRepositoryMock.Setup(x => x.EmailExistsAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         _hashServiceMock.Setup(x => x.Hash(password))
             .Returns("hashedPassword");
-        _userRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<User>()))
+        _userRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User u) => u);
-        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((User u) => u);
 
         // Act
@@ -184,8 +184,8 @@ public class AuthServiceTests
         result.User.FullName.Should().Be(fullName);
         result.User.UserName.Should().Be(userName);
         
-        _userRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<User>()), Times.Once);
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -197,7 +197,7 @@ public class AuthServiceTests
         var fullName = "Test User";
         var userName = "testuser";
 
-        _userRepositoryMock.Setup(x => x.EmailExistsAsync(email))
+        _userRepositoryMock.Setup(x => x.EmailExistsAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act & Assert
@@ -228,9 +228,9 @@ public class AuthServiceTests
             RefreshTokenExpiry = DateTime.UtcNow.AddDays(7)
         };
 
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -242,7 +242,7 @@ public class AuthServiceTests
         result.RefreshToken.Should().NotBeNullOrEmpty();
         result.RefreshToken.Should().NotBe(refreshToken); // Should be new token
         
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -258,7 +258,7 @@ public class AuthServiceTests
             RefreshTokenExpiry = DateTime.UtcNow.AddDays(7)
         };
 
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act & Assert
@@ -281,7 +281,7 @@ public class AuthServiceTests
             RefreshTokenExpiry = DateTime.UtcNow.AddDays(-1) // Expired
         };
 
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act & Assert
@@ -324,9 +324,9 @@ public class AuthServiceTests
 
         _currentUserServiceMock.Setup(x => x.UserId)
             .Returns(userId);
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -336,7 +336,7 @@ public class AuthServiceTests
         _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u => 
             u.RefreshToken == null && 
             u.RefreshTokenExpiry == null
-        )), Times.Once);
+        ), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -351,7 +351,7 @@ public class AuthServiceTests
 
         // Assert
         await act.Should().NotThrowAsync();
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Never);
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     #endregion

@@ -10,6 +10,8 @@ using PeerDrop.Shared.Constants;
 using PeerDrop.Shared.DTOs.User;
 using PeerDrop.Shared.Enums;
 using Xunit;
+using Microsoft.AspNetCore.Http;
+using PeerDrop.Shared.DTOs.Files;
 
 namespace PeerDrop.Tests.Services;
 
@@ -18,6 +20,7 @@ public class UserServiceTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IMapper> _mapperMock;
     private readonly Mock<IFileService> _fileServiceMock;
+    private readonly Mock<ICurrentUserService> _currentUserServiceMock;
     private readonly UserService _userService;
 
     public UserServiceTests()
@@ -25,7 +28,12 @@ public class UserServiceTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _mapperMock = new Mock<IMapper>();
         _fileServiceMock = new Mock<IFileService>();
-        _userService = new UserService(_userRepositoryMock.Object, _mapperMock.Object, _fileServiceMock.Object);
+        _currentUserServiceMock = new Mock<ICurrentUserService>();
+        _userService = new UserService(
+            _userRepositoryMock.Object, 
+            _mapperMock.Object, 
+            _fileServiceMock.Object,
+            _currentUserServiceMock.Object);
     }
 
     #region GetAllUsersAsync Tests
@@ -46,7 +54,7 @@ public class UserServiceTests
             new() { Id = users[1].Id, Email = "user2@example.com", FullName = "User 2", Role = "Admin" }
         };
 
-        _userRepositoryMock.Setup(x => x.GetAllAsync())
+        _userRepositoryMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(users);
         
         _mapperMock.Setup(x => x.Map<IEnumerable<UserResponse>>(users))
@@ -86,7 +94,7 @@ public class UserServiceTests
             Role = "User"
         };
 
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         
         _mapperMock.Setup(x => x.Map<UserResponse>(user))
@@ -107,7 +115,7 @@ public class UserServiceTests
         // Arrange
         var userId = Guid.NewGuid();
         
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act & Assert
@@ -142,7 +150,7 @@ public class UserServiceTests
             Role = "User"
         };
 
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         
         _mapperMock.Setup(x => x.Map<UserResponse>(user))
@@ -162,7 +170,7 @@ public class UserServiceTests
         // Arrange
         var email = "nonexistent@example.com";
         
-        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email))
+        _userRepositoryMock.Setup(x => x.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act & Assert
@@ -197,12 +205,10 @@ public class UserServiceTests
             Role = UserRole.User
         };
         
-        var updatedData = new UserResponse
+        var updatedData = new UpdateUserRequest
         {
-            Id = userId,
-            Email = "new@example.com",
-            FullName = "New Name",
-            Role = "User"
+            UserName = "newusername",
+            FullName = "New Name"
         };
 
         var updatedResponse = new UserResponse
@@ -213,9 +219,9 @@ public class UserServiceTests
             Role = "User"
         };
 
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
-        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(updatedUser);
         _mapperMock.Setup(x => x.Map<UserResponse>(It.IsAny<User>()))
             .Returns(updatedResponse);
@@ -228,7 +234,7 @@ public class UserServiceTests
         result.Email.Should().Be("new@example.com");
         result.FullName.Should().Be("New Name");
         
-        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -236,15 +242,13 @@ public class UserServiceTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var updatedData = new UserResponse
+        var updatedData = new UpdateUserRequest
         {
-            Id = userId,
-            Email = "new@example.com",
-            FullName = "New Name",
-            Role = "User"
+            UserName = "newusername",
+            FullName = "New Name"
         };
 
-        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId))
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((User?)null);
 
         // Act & Assert
@@ -264,9 +268,9 @@ public class UserServiceTests
         // Arrange
         var userId = Guid.NewGuid();
 
-        _userRepositoryMock.Setup(x => x.ExistsAsync(userId))
+        _userRepositoryMock.Setup(x => x.ExistsAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _userRepositoryMock.Setup(x => x.DeleteAsync(userId))
+        _userRepositoryMock.Setup(x => x.DeleteAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -274,7 +278,7 @@ public class UserServiceTests
 
         // Assert
         result.Should().BeTrue();
-        _userRepositoryMock.Verify(x => x.DeleteAsync(userId), Times.Once);
+        _userRepositoryMock.Verify(x => x.DeleteAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -283,11 +287,240 @@ public class UserServiceTests
         // Arrange
         var userId = Guid.NewGuid();
 
-        _userRepositoryMock.Setup(x => x.ExistsAsync(userId))
+        _userRepositoryMock.Setup(x => x.ExistsAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act & Assert
         var act = async () => await _userService.DeleteUserAsync(userId);
+        
+        await act.Should().ThrowAsync<NotFoundException>()
+            .WithMessage(ErrorMessages.UserNotFound);
+    }
+
+    #endregion
+
+    #region UploadAvatarAsync Tests
+
+    [Fact]
+    public async Task UploadAvatarAsync_WithValidFile_ShouldUploadAndReturnUser()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var fileMock = new Mock<IFormFile>();
+        var content = "fake image content";
+        var fileName = "avatar.jpg";
+        var ms = new MemoryStream();
+        var writer = new StreamWriter(ms);
+        writer.Write(content);
+        writer.Flush();
+        ms.Position = 0;
+
+        fileMock.Setup(f => f.Length).Returns(1024); // 1KB
+        fileMock.Setup(f => f.FileName).Returns(fileName);
+        fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
+        fileMock.Setup(f => f.ContentType).Returns("image/jpeg");
+
+        var existingUser = new User
+        {
+            Id = userId,
+            Email = "test@example.com",
+            FullName = "Test User",
+            Role = UserRole.User,
+            Avatar = null,
+            AvatarPublicId = null
+        };
+
+        var uploadResponse = new FileResponse
+        {
+            SecureUrl = "https://cloudinary.com/avatar.jpg",
+            PublicId = "public_id_123"
+        };
+
+        var updatedUser = new User
+        {
+            Id = userId,
+            Email = "test@example.com",
+            FullName = "Test User",
+            Role = UserRole.User,
+            Avatar = uploadResponse.SecureUrl,
+            AvatarPublicId = uploadResponse.PublicId
+        };
+
+        var userResponse = new UserResponse
+        {
+            Id = userId,
+            Email = "test@example.com",
+            FullName = "Test User",
+            Role = "User",
+            Avatar = uploadResponse.SecureUrl
+        };
+
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(existingUser);
+        _fileServiceMock.Setup(x => x.UploadFileAsync(fileMock.Object, It.IsAny<CancellationToken>())).ReturnsAsync(uploadResponse);
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>())).ReturnsAsync(updatedUser);
+        _mapperMock.Setup(x => x.Map<UserResponse>(updatedUser)).Returns(userResponse);
+
+        // Act
+        var result = await _userService.UploadAvatarAsync(fileMock.Object);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Avatar.Should().Be(uploadResponse.SecureUrl);
+        _fileServiceMock.Verify(x => x.UploadFileAsync(fileMock.Object, It.IsAny<CancellationToken>()), Times.Once);
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u => 
+            u.Avatar == uploadResponse.SecureUrl && 
+            u.AvatarPublicId == uploadResponse.PublicId), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UploadAvatarAsync_WithExistingAvatar_ShouldDeleteOldAndUploadNew()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var fileMock = new Mock<IFormFile>();
+        var fileName = "new-avatar.png";
+        var ms = new MemoryStream(new byte[1024]);
+
+        fileMock.Setup(f => f.Length).Returns(1024);
+        fileMock.Setup(f => f.FileName).Returns(fileName);
+        fileMock.Setup(f => f.OpenReadStream()).Returns(ms);
+
+        var existingUser = new User
+        {
+            Id = userId,
+            Email = "test@example.com",
+            FullName = "Test User",
+            Role = UserRole.User,
+            Avatar = "https://cloudinary.com/old-avatar.jpg",
+            AvatarPublicId = "old_public_id"
+        };
+
+        var uploadResponse = new FileResponse
+        {
+            SecureUrl = "https://cloudinary.com/new-avatar.png",
+            PublicId = "new_public_id"
+        };
+
+        var updatedUser = new User
+        {
+            Id = userId,
+            Email = "test@example.com",
+            FullName = "Test User",
+            Role = UserRole.User,
+            Avatar = uploadResponse.SecureUrl,
+            AvatarPublicId = uploadResponse.PublicId
+        };
+
+        var userResponse = new UserResponse
+        {
+            Id = userId,
+            Email = "test@example.com",
+            FullName = "Test User",
+            Role = "User",
+            Avatar = uploadResponse.SecureUrl
+        };
+
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(existingUser);
+        _fileServiceMock.Setup(x => x.UploadFileAsync(fileMock.Object, It.IsAny<CancellationToken>())).ReturnsAsync(uploadResponse);
+        _fileServiceMock.Setup(x => x.DeleteFileByPublicIdAsync("old_public_id", It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>())).ReturnsAsync(updatedUser);
+        _mapperMock.Setup(x => x.Map<UserResponse>(updatedUser)).Returns(userResponse);
+
+        // Act
+        var result = await _userService.UploadAvatarAsync(fileMock.Object);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Avatar.Should().Be(uploadResponse.SecureUrl);
+        _fileServiceMock.Verify(x => x.DeleteFileByPublicIdAsync("old_public_id", It.IsAny<CancellationToken>()), Times.Once);
+        _fileServiceMock.Verify(x => x.UploadFileAsync(fileMock.Object, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task UploadAvatarAsync_WithNullFile_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(new User { Id = userId });
+
+        // Act & Assert
+        var act = async () => await _userService.UploadAvatarAsync(null!);
+        
+        await act.Should().ThrowAsync<BusinessException>()
+            .WithMessage(ErrorMessages.BadRequest);
+    }
+
+    [Fact]
+    public async Task UploadAvatarAsync_WithEmptyFile_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(0);
+
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(new User { Id = userId });
+
+        // Act & Assert
+        var act = async () => await _userService.UploadAvatarAsync(fileMock.Object);
+        
+        await act.Should().ThrowAsync<BusinessException>()
+            .WithMessage(ErrorMessages.BadRequest);
+    }
+
+    [Fact]
+    public async Task UploadAvatarAsync_WithFileTooLarge_ShouldThrowFileTooLargeException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(ProjectConstants.FileUpload.MaxAvatarSizeBytes + 1);
+        fileMock.Setup(f => f.FileName).Returns("large-avatar.jpg");
+
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(new User { Id = userId });
+
+        // Act & Assert
+        var act = async () => await _userService.UploadAvatarAsync(fileMock.Object);
+        
+        await act.Should().ThrowAsync<FileTooLargeException>()
+            .WithMessage(ErrorMessages.FileTooLarge);
+    }
+
+    [Fact]
+    public async Task UploadAvatarAsync_WithInvalidExtension_ShouldThrowBusinessException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(1024);
+        fileMock.Setup(f => f.FileName).Returns("avatar.exe"); // Invalid extension
+
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(new User { Id = userId });
+
+        // Act & Assert
+        var act = async () => await _userService.UploadAvatarAsync(fileMock.Object);
+        
+        await act.Should().ThrowAsync<BusinessException>()
+            .WithMessage(ErrorMessages.BadRequest);
+    }
+
+    [Fact]
+    public async Task UploadAvatarAsync_WithNonExistingUser_ShouldThrowNotFoundException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var fileMock = new Mock<IFormFile>();
+        
+        _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync((User?)null);
+
+        // Act & Assert
+        var act = async () => await _userService.UploadAvatarAsync(fileMock.Object);
         
         await act.Should().ThrowAsync<NotFoundException>()
             .WithMessage(ErrorMessages.UserNotFound);

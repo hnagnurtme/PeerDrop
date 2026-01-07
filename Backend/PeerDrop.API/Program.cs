@@ -33,6 +33,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "PeerDrop API v1");
+        options.RoutePrefix = "swagger";
+        options.DocumentTitle = "PeerDrop API Documentation";
+        options.DisplayRequestDuration();
+        options.EnableDeepLinking();
+        options.EnableFilter();
+        options.ShowExtensions();
     });
 }
 else
