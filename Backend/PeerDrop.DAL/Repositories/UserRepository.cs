@@ -12,7 +12,7 @@ public class UserRepository(AppDbContext context) : IUserRepository
         return await context.Users.ToListAsync();
     }
 
-    public async Task<User?> GetByIdAsync(Guid id)
+    public async Task<User?> GetByIdAsync(Guid? id)
     {
         return await context.Users.FindAsync(id);
     }

@@ -20,7 +20,7 @@ public class AuthController(IAuthService authService) : BaseApiController
     [AllowAnonymous]
     public async Task<ActionResult<ApiResponse<AuthResponse>>> Register([FromBody] RegisterRequest request)
     {
-        var result = await authService.RegisterAsync(request.Email, request.Password, request.FullName);
+        var result = await authService.RegisterAsync(request.Email, request.Password, request.FullName, request.UserName);
         return CreatedResponse(result, "Registration successful");
     }
 

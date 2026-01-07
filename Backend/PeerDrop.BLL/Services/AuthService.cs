@@ -12,35 +12,23 @@ using PeerDrop.Shared.Helpers;
 
 namespace PeerDrop.BLL.Services;
 
-public class AuthService : IAuthService
+public class AuthService(
+    IUserRepository userRepository,
+    IOptions<JwtSettings> jwtSettings,
+    IHashService hashService,
+    ICurrentUserService currentUserService
+)
+    : IAuthService
 {
-    private readonly IMapper _mapper;
-    private readonly IUserRepository _userRepository;
-    private readonly JwtSettings _jwtSettings;
-    private readonly IHashService _hashService;
-    private readonly ICurrentUserService _currentUserService;
+    private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
-    public AuthService(
-        IUserRepository userRepository, 
-        IMapper mapper, 
-        IOptions<JwtSettings> jwtSettings, 
-        IHashService hashService,
-        ICurrentUserService currentUserService)
-    {
-        _mapper = mapper;
-        _userRepository = userRepository;
-        _jwtSettings = jwtSettings.Value;
-        _hashService = hashService;
-        _currentUserService = currentUserService;
-    }
-    
 
     public async Task<AuthResponse> LoginAsync(string email, string password)
     {
-        var user = await _userRepository.GetByEmailAsync(email)
+        var user = await userRepository.GetByEmailAsync(email)
             ?? throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
 
-        if (!_hashService.Verify(password, user.PasswordHash))
+        if (!hashService.Verify(password, user.PasswordHash))
         {
             throw new UnauthorizedException(ErrorMessages.InvalidCredentials, ErrorCodes.AuthInvalidCredentials);
         }
@@ -53,9 +41,9 @@ public class AuthService : IAuthService
         return await GenerateAndSaveTokensAsync(user);
     }
 
-    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName)
+    public async Task<AuthResponse> RegisterAsync(string email, string password, string fullName, string userName)
     {
-        if (await _userRepository.EmailExistsAsync(email))
+        if (await userRepository.EmailExistsAsync(email))
         {
             throw new UnprocessableEntityException(ErrorMessages.EmailAlreadyExists, ErrorCodes.AuthEmailAlreadyExists);
         }
@@ -64,14 +52,15 @@ public class AuthService : IAuthService
         {
             Id = Guid.NewGuid(),
             Email = email,
-            PasswordHash = _hashService.Hash(password),
+            UserName = userName,
+            PasswordHash = hashService.Hash(password),
             FullName = fullName,
             Role = UserRole.User,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
 
-        await _userRepository.CreateAsync(user);
+        await userRepository.CreateAsync(user);
 
         return await GenerateAndSaveTokensAsync(user);
     }
@@ -83,7 +72,7 @@ public class AuthService : IAuthService
             throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
         }
 
-        var user = await _userRepository.GetByIdAsync(userGuid)
+        var user = await userRepository.GetByIdAsync(userGuid)
             ?? throw new UnauthorizedException(ErrorMessages.InvalidToken, ErrorCodes.AuthInvalidToken);
 
         // Validate refresh token
@@ -104,24 +93,24 @@ public class AuthService : IAuthService
 
     public async Task LogoutAsync()
     {
-        var userId = _currentUserService.UserId;
+        var userId = currentUserService.UserId;
         if (userId == null)
         {
             return;
         }
 
-        var user = await _userRepository.GetByIdAsync(userId.Value);
+        var user = await userRepository.GetByIdAsync(userId.Value);
         if (user != null)
         {
             // Invalidate refresh token
             user.RefreshToken = null;
             user.RefreshTokenExpiry = null;
             user.UpdatedAt = DateTime.UtcNow;
-            await _userRepository.UpdateAsync(user);
+            await userRepository.UpdateAsync(user);
         }
     }
 
-    private async Task<AuthResponse> GenerateAndSaveTokensAsync(User user)
+    async private Task<AuthResponse> GenerateAndSaveTokensAsync(User user)
     {
         var secretKey = _jwtSettings.SecretKey;
         var issuer = _jwtSettings.Issuer;
@@ -145,7 +134,7 @@ public class AuthService : IAuthService
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiry = refreshTokenExpiry;
         user.UpdatedAt = DateTime.UtcNow;
-        await _userRepository.UpdateAsync(user);
+        await userRepository.UpdateAsync(user);
 
         return new AuthResponse
         {
@@ -156,8 +145,10 @@ public class AuthService : IAuthService
             {
                 Id = user.Id,
                 Email = user.Email,
+                UserName = user.UserName,
                 FullName = user.FullName,
-                Role = user.Role.ToString()
+                Role = user.Role.ToString(),
+                Avatar = user.Avatar
             }
         };
     }

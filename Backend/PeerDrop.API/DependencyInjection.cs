@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PeerDrop.API.Filters;
-using PeerDrop.Shared.Configurations;
 
 namespace PeerDrop.API;
 

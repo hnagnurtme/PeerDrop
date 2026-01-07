@@ -44,6 +44,7 @@ public class AuthServiceTests
             _jwtSettings,
             _hashServiceMock.Object,
             _currentUserServiceMock.Object
+            
         );
     }
 
@@ -165,6 +166,7 @@ public class AuthServiceTests
         var email = "newuser@example.com";
         var password = "Password123";
         var fullName = "New User";
+        var userName = "newuser";
 
         _userRepositoryMock.Setup(x => x.EmailExistsAsync(email))
             .ReturnsAsync(false);
@@ -176,7 +178,7 @@ public class AuthServiceTests
             .ReturnsAsync((User u) => u);
 
         // Act
-        var result = await _authService.RegisterAsync(email, password, fullName);
+        var result = await _authService.RegisterAsync(email, password, fullName, userName);
 
         // Assert
         result.Should().NotBeNull();
@@ -184,6 +186,7 @@ public class AuthServiceTests
         result.RefreshToken.Should().NotBeNullOrEmpty();
         result.User.Email.Should().Be(email);
         result.User.FullName.Should().Be(fullName);
+        result.User.UserName.Should().Be(userName);
         
         _userRepositoryMock.Verify(x => x.CreateAsync(It.IsAny<User>()), Times.Once);
         _userRepositoryMock.Verify(x => x.UpdateAsync(It.IsAny<User>()), Times.Once);
@@ -196,12 +199,13 @@ public class AuthServiceTests
         var email = "existing@example.com";
         var password = "Password123";
         var fullName = "Test User";
+        var userName = "testuser";
 
         _userRepositoryMock.Setup(x => x.EmailExistsAsync(email))
             .ReturnsAsync(true);
 
         // Act & Assert
-        var act = async () => await _authService.RegisterAsync(email, password, fullName);
+        var act = async () => await _authService.RegisterAsync(email, password, fullName, userName);
         
         await act.Should().ThrowAsync<UnprocessableEntityException>()
             .WithMessage(ErrorMessages.EmailAlreadyExists);

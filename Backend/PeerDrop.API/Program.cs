@@ -24,7 +24,7 @@ builder.Services.AddEndpointsApiExplorer();
 // Add custom services from all layers
 builder.Services.AddSharedLayer(builder.Configuration);
 builder.Services.AddDataAccessLayer(builder.Configuration);
-builder.Services.AddBusinessLogicLayer();
+builder.Services.AddBusinessLogicLayer(builder.Configuration);
 builder.Services.AddApiServices();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddSwaggerDocumentation();

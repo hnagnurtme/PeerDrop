@@ -16,12 +16,16 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 
 // Signup Schema
 export const signupSchema = z.object( {
-    username: z
+    userName: z
         .string()
         .min( 1, 'Username is required' )
         .min( 3, 'Username must be at least 3 characters' )
         .max( 20, 'Username must be at most 20 characters' )
         .regex( /^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores' ),
+    fullName: z
+        .string()
+        .min( 1, 'Full name is required' )
+        .max( 100, 'Full name must be at most 100 characters' ),
     email: z
         .string()
         .min( 1, 'Email is required' )
