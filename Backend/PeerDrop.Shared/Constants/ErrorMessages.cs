@@ -30,4 +30,6 @@ public static class ErrorMessages
     public const string FileTooLarge = "File is too large.";
     public const string CloudStorageUnauthorized = "Unauthorized access to cloud storage.";
     public const  string CloudStorageForbidden = "Cloud storage forbidden.";
+    public const string CloudUploadFailed = "Cloud upload failed.";
+    public const string InvalidFile = "Invalid file.";
 }

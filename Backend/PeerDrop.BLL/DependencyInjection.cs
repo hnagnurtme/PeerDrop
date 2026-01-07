@@ -4,6 +4,7 @@ using FluentValidation.AspNetCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PeerDrop.BLL.Exceptions;
+using PeerDrop.BLL.ExternalServices;
 using PeerDrop.BLL.Interfaces.Services;
 using PeerDrop.BLL.Mapping;
 using PeerDrop.BLL.Services;
@@ -22,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IHashService, BCryptPasswordHasher>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<IFileService, FileService>();
+        
 
         // Add HttpContextAccessor (required for CurrentUserService)
         services.AddHttpContextAccessor();
@@ -35,12 +37,15 @@ public static class DependencyInjection
         
         // Add Cloudinary
         services.AddCloudStorage(configuration);
+        
+        // Add External Service
+        services.AddScoped<IFileStorageService, CloudinaryFileStorageService>();
 
 
         return services;
     }
 
-    public static IServiceCollection AddCloudStorage(this IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection AddCloudStorage(this IServiceCollection services, IConfiguration configuration)
     {
         var cloudinarySection = configuration.GetSection("Cloudinary");
         var cloudName = cloudinarySection["CloudName"];
