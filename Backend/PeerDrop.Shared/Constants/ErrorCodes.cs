@@ -31,4 +31,6 @@ public static class ErrorCodes
     public const string FileTooLarge = "FILE_TOO_LARGE";
     public const string CloudStorageUnauthorized = "CLOUD_STORAGE_UNAUTHORIZED";
     public  const string CloudStorageForbidden = "CLOUD_STORAGE_FORBRED";
+    public const string CloudUploadFailed = "CLOUD_UPLOAD_FAILED";
+    public const string InvalidFile = "INVALID_FILE";
 }
