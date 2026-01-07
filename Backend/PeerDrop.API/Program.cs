@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using PeerDrop.API;
 using PeerDrop.API.Filters;
 using PeerDrop.API.Middlewares;
 using PeerDrop.BLL;
 using PeerDrop.DAL;
+using PeerDrop.DAL.DbContexts;
 using PeerDrop.Shared;
 using PeerDrop.Shared.Responses;
 
@@ -42,6 +44,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Add auto apply migration
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI(options =>

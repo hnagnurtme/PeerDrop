@@ -1,6 +1,6 @@
 namespace PeerDrop.Shared.Constants;
 
-public class ProjectConstants
+public static class ProjectConstants
 {
     public static class FileUpload
     {
