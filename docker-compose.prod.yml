@@ -1,0 +1,71 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: peerdrop-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-peerdrop}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-peerdrop_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - peerdrop-network-prod
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-peerdrop} -d ${POSTGRES_DB:-peerdrop_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (.NET) - Pull from DockerHub
+  backend:
+    image: ${DOCKER_USERNAME}/peerdrop-backend:${IMAGE_TAG:-latest}
+    container_name: peerdrop-backend-prod
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-peerdrop_db};Username=${POSTGRES_USER:-peerdrop};Password=${POSTGRES_PASSWORD}
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      - JwtSettings__Issuer=${JWT_ISSUER:-PeerDrop}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-PeerDrop}
+      - JwtSettings__ExpiryInMinutes=${JWT_EXPIRY:-60}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - peerdrop-network-prod
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend (Angular + Nginx) - Pull from DockerHub
+  frontend:
+    image: ${DOCKER_USERNAME}/peerdrop-frontend:${IMAGE_TAG:-latest}
+    container_name: peerdrop-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - peerdrop-network-prod
+    environment:
+      - API_URL=${API_URL:-http://localhost:8080/api}
+
+volumes:
+  postgres_data_prod:
+    driver: local
+
+networks:
+  peerdrop-network-prod:
+    driver: bridge
