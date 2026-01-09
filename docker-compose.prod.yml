@@ -1,26 +1,4 @@
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:16-alpine
-    container_name: peerdrop-postgres-prod
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-peerdrop}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-peerdrop_db}
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres_data_prod:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    networks:
-      - peerdrop-network-prod
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-peerdrop} -d ${POSTGRES_DB:-peerdrop_db}" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   # Backend API (.NET) - Pull from DockerHub
   backend:
     image: ${DOCKER_USERNAME}/peerdrop-backend:${IMAGE_TAG:-latest}
@@ -29,16 +7,22 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=${POSTGRES_DB:-peerdrop_db};Username=${POSTGRES_USER:-peerdrop};Password=${POSTGRES_PASSWORD}
-      - JwtSettings__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      # Database (Aiven Cloud PostgreSQL)
+      - ConnectionStrings__DefaultConnection=${DATABASE_CONNECTION_STRING}
+      # JWT Settings
+      - JwtSettings__SecretKey=${JWT_SECRET_KEY}
       - JwtSettings__Issuer=${JWT_ISSUER:-PeerDrop}
-      - JwtSettings__Audience=${JWT_AUDIENCE:-PeerDrop}
+      - JwtSettings__Audience=${JWT_AUDIENCE:-PeerDropUsers}
       - JwtSettings__ExpiryInMinutes=${JWT_EXPIRY:-60}
+      - JwtSettings__RefreshTokenExpiryInDays=${JWT_REFRESH_EXPIRY:-7}
+      # Cloudinary (optional)
+      - Cloudinary__CloudName=${CLOUDINARY_CLOUD_NAME:-}
+      - Cloudinary__ApiKey=${CLOUDINARY_API_KEY:-}
+      - Cloudinary__ApiSecret=${CLOUDINARY_API_SECRET:-}
+      # CORS
+      - Cors__ProductionOrigin=${CORS_ORIGIN:-https://peerdrop.cloud.hnagnurtme.id.vn}
     ports:
       - "8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
     networks:
       - peerdrop-network-prod
     healthcheck:
@@ -54,17 +38,11 @@ services:
     container_name: peerdrop-frontend-prod
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3000:80"
     depends_on:
       - backend
     networks:
       - peerdrop-network-prod
-    environment:
-      - API_URL=${API_URL:-http://localhost:8080/api}
-
-volumes:
-  postgres_data_prod:
-    driver: local
 
 networks:
   peerdrop-network-prod:
