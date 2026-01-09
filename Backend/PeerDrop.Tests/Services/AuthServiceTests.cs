@@ -169,9 +169,9 @@ public class AuthServiceTests
         _hashServiceMock.Setup(x => x.Hash(password))
             .Returns("hashedPassword");
         _userRepositoryMock.Setup(x => x.CreateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User u) => u);
+            .ReturnsAsync((User u, CancellationToken _) => u);
         _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User u) => u);
+            .ReturnsAsync((User u, CancellationToken _) => u);
 
         // Act
         var result = await _authService.RegisterAsync(email, password, fullName, userName);
