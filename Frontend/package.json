@@ -1,41 +1,43 @@
 {
   "name": "frontend",
-  "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
   },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true,
+    "overrides": [
+      {
+        "files": "*.html",
+        "options": {
+          "parser": "angular"
+        }
+      }
+    ]
+  },
+  "private": true,
+  "packageManager": "npm@10.9.2",
   "dependencies": {
-    "clsx": "^2.1.1",
-    "nanoid": "^5.1.6",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-router-dom": "^7.11.0",
-    "zod": "^4.2.1",
-    "zustand": "^5.0.9"
+    "@angular/common": "^21.0.0",
+    "@angular/compiler": "^21.0.0",
+    "@angular/core": "^21.0.0",
+    "@angular/forms": "^21.0.0",
+    "@angular/platform-browser": "^21.0.0",
+    "@angular/router": "^21.0.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.5",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "autoprefixer": "^10.4.23",
-    "eslint": "^9.39.1",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^16.5.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.19",
-    "typescript": "~5.9.3",
-    "typescript-eslint": "^8.46.4",
-    "vite": "npm:rolldown-vite@7.2.5"
-  },
-  "overrides": {
-    "vite": "npm:rolldown-vite@7.2.5"
+    "@angular/build": "^21.0.5",
+    "@angular/cli": "^21.0.5",
+    "@angular/compiler-cli": "^21.0.0",
+    "jsdom": "^27.1.0",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
   }
 }
