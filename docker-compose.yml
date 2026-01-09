@@ -29,7 +29,7 @@ services:
     container_name: peerdrop-backend
     restart: unless-stopped
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=peerdrop_db;Username=peerdrop;Password=peerdrop_password
       - JwtSettings__SecretKey=your-secret-key-min-32-characters-long-for-security
