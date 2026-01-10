@@ -1,0 +1,24 @@
+<form [formGroup]="loginForm" class="space-y-6" (ngSubmit)="onSubmit()">
+    <auth-input label="Email Address" placeholder="name@enterprise.com" icon="alternate_email" type="email"
+        formControlName="email" [errorMessage]="emailError" />
+
+    <div class="space-y-2">
+        <auth-input label="Password" placeholder="••••••••" icon="shield_lock" type="password"
+            formControlName="password" [errorMessage]="passwordError" />
+
+        <div class="flex items-center justify-between mt-4 px-1">
+            <label class="flex items-center gap-2 cursor-pointer group">
+                <input
+                    class="w-4 h-4 rounded border-gray-700 bg-gray-800 text-primary focus:ring-primary focus:ring-offset-background-dark"
+                    type="checkbox" formControlName="rememberMe" />
+                <span class="text-xs text-gray-400 group-hover:text-gray-200 transition-colors">Remember this
+                    device</span>
+            </label>
+            <a class="text-xs font-bold text-primary hover:text-primary-hover transition-colors" href="#">Forgot?</a>
+        </div>
+    </div>
+
+    <div class="pt-4">
+        <auth-submit-button text="Authenticate" icon="fingerprint" />
+    </div>
+</form>

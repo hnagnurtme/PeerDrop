@@ -1,13 +1,121 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="dark">
+
 <head>
-  <meta charset="utf-8">
-  <title>Frontend</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <!-- Character Encoding & Viewport -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <base href="/">
+
+    <!-- Primary Meta Tags -->
+    <title>PeerDrop | Secure P2P File Sharing & Decentralized Workspace</title>
+    <meta name="title" content="PeerDrop | Secure P2P File Sharing & Decentralized Workspace">
+    <meta name="description"
+        content="Enterprise-grade peer-to-peer file sharing with end-to-end encryption. Share files securely, directly between devices without cloud storage. Fast, private, and built for modern teams.">
+    <meta name="keywords"
+        content="P2P file sharing, secure file transfer, encrypted sharing, decentralized workspace, peer-to-peer, end-to-end encryption, file drop, direct transfer">
+    <meta name="author" content="PeerDrop Team">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://peerdrop.cloud.hnagnurtme.id.vn/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://peerdrop.cloud.hnagnurtme.id.vn/">
+    <meta property="og:title" content="PeerDrop | Secure P2P File Sharing">
+    <meta property="og:description"
+        content="Enterprise-grade peer-to-peer file sharing with end-to-end encryption. Share files securely between devices.">
+    <meta property="og:image" content="https://peerdrop.cloud.hnagnurtme.id.vn/assets/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="PeerDrop">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://peerdrop.cloud.hnagnurtme.id.vn/">
+    <meta name="twitter:title" content="PeerDrop | Secure P2P File Sharing">
+    <meta name="twitter:description" content="Enterprise-grade peer-to-peer file sharing with end-to-end encryption.">
+    <meta name="twitter:image" content="https://peerdrop.cloud.hnagnurtme.id.vn/assets/og-image.png">
+
+    <!-- Theme & App Manifest -->
+    <meta name="theme-color" content="#020406">
+    <meta name="msapplication-TileColor" content="#10b981">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="PeerDrop">
+    <link rel="manifest" href="manifest.webmanifest">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+
+    <!-- Fonts Preload -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "PeerDrop",
+        "description": "Enterprise-grade peer-to-peer file sharing with end-to-end encryption",
+        "url": "https://peerdrop.cloud.hnagnurtme.id.vn/",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": [
+            "End-to-end encryption",
+            "Direct P2P transfer",
+            "No cloud storage required",
+            "Cross-platform support"
+        ],
+        "author": {
+            "@type": "Organization",
+            "name": "PeerDrop Team"
+        }
+    }
+    </script>
+
+    <!-- Security Headers (CSP handled by server) -->
+    <meta name="referrer" content="strict-origin-when-cross-origin">
 </head>
-<body>
-  <app-root></app-root>
+
+<body class="bg-background-dark text-white antialiased">
+    <!-- App Root -->
+    <app-root>
+        <!-- Loading State (SEO-friendly content) -->
+        <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#020406;">
+            <div style="text-align:center;color:#fff;">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="#10b981" style="margin:0 auto 16px;">
+                    <path
+                        d="M44 11.27C44 14.01 39.84 16.4 33.69 17.64C39.84 18.88 44 21.26 44 24C44 26.74 39.84 29.12 33.69 30.36C39.84 31.6 44 33.99 44 36.73C44 40.74 35.05 44 24 44C12.95 44 4 40.74 4 36.73C4 33.99 8.16 31.6 14.31 30.36C8.16 29.12 4 26.74 4 24C4 21.26 8.16 18.88 14.31 17.64C8.16 16.4 4 14.01 4 11.27C4 7.26 12.95 4 24 4C35.05 4 44 7.26 44 11.27Z" />
+                </svg>
+                <p style="font-family:system-ui;font-weight:600;font-size:14px;opacity:0.8;">Loading PeerDrop...</p>
+            </div>
+        </div>
+    </app-root>
+
+    <!-- Noscript Fallback -->
+    <noscript>
+        <div style="padding:40px;text-align:center;background:#020406;color:#fff;min-height:100vh;">
+            <h1 style="font-size:24px;margin-bottom:16px;">JavaScript Required</h1>
+            <p style="opacity:0.8;">PeerDrop requires JavaScript to run. Please enable JavaScript in your browser
+                settings.</p>
+        </div>
+    </noscript>
 </body>
+
 </html>

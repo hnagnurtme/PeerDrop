@@ -7,14 +7,21 @@ export interface User {
     avatar?: string;
 }
 
-export interface LoginRequest{
+export interface LoginRequest {
     email: string;
     password: string;
 }
 
-export interface LoginResponse{
+export interface LoginResponse {
     accessToken: string;
     refreshToken: string;
     expiredAt: string;
-    user : User
+    user: User;
+}
+
+export interface RegisterRequest {
+    email: string;
+    password: string;
+    fullName: string;
+    userName: string;
 }

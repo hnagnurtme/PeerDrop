@@ -1,43 +1,77 @@
-import { Injectable, signal } from "@angular/core";
-import { LoginRequest, User } from "./auth.model";
+import { Injectable, computed, signal } from "@angular/core";
+import { LoginRequest, RegisterRequest, User } from "./auth.model";
 import { AuthService } from "./auth.service";
 import { StorageService } from "@/app/core/services/storage.service";
 import { tap } from "rxjs";
 
-@Injectable({ providedIn: 'root' })
+@Injectable( { providedIn: 'root' } )
 export class AuthFacade {
-    private readonly user  = signal<User | null>(null);
+    private readonly _user = signal<User | null>( null );
+    private readonly _isAuthenticated = signal<boolean>( false );
+    private readonly _isLoading = signal<boolean>( false );
 
-    public readonly isAuthenticated = signal<boolean>(false);
+    public readonly user = this._user.asReadonly();
+    public readonly isAuthenticated = this._isAuthenticated.asReadonly();
+    public readonly isLoading = this._isLoading.asReadonly();
+    public readonly currentUser = computed( () => this._user() );
 
-    constructor(
-        private authService : AuthService,
-        private storageService : StorageService
-    ) {}
+    constructor (
+        private authService: AuthService,
+        private storageService: StorageService
+    ) {
+        this.initFromStorage();
+    }
 
-    login(payload : LoginRequest){
-        return this.authService.login(payload).pipe(
-            tap(response => {
-                    if(!response.isSuccess) return;
+    private initFromStorage (): void {
+        const token = this.storageService.getAccessToken();
+        const user = this.storageService.getUser<User>();
+        if ( token && user ) {
+            this._user.set( user );
+            this._isAuthenticated.set( true );
+        }
+    }
 
-                    const { accessToken, refreshToken, user } = response.data;
+    login ( payload: LoginRequest ) {
+        this._isLoading.set( true );
+        return this.authService.login( payload ).pipe(
+            tap( response => {
+                this._isLoading.set( false );
+                if ( !response.isSuccess ) return;
 
-                    this.storageService.setAccessToken(accessToken);
-                    this.storageService.setRefreshToken(refreshToken);
-                    this.user.set(user);
-                    this.isAuthenticated.set(true);
-            })
+                const { accessToken, refreshToken, user } = response.data;
+                this.storageService.setAccessToken( accessToken );
+                this.storageService.setRefreshToken( refreshToken );
+                this.storageService.setUser( user );
+                this._user.set( user );
+                this._isAuthenticated.set( true );
+            } )
         );
     }
 
+    register ( payload: RegisterRequest ) {
+        this._isLoading.set( true );
+        return this.authService.register( payload ).pipe(
+            tap( response => {
+                this._isLoading.set( false );
+                if ( !response.isSuccess ) return;
 
-    logout(){
+                const { accessToken, refreshToken, user } = response.data;
+                this.storageService.setAccessToken( accessToken );
+                this.storageService.setRefreshToken( refreshToken );
+                this.storageService.setUser( user );
+                this._user.set( user );
+                this._isAuthenticated.set( true );
+            } )
+        );
+    }
+
+    logout () {
         return this.authService.logout().pipe(
-            tap(() => {
+            tap( () => {
                 this.storageService.clearTokens();
-                this.user.set(null);
-                this.isAuthenticated.set(false);
-            })  
-        )
+                this._user.set( null );
+                this._isAuthenticated.set( false );
+            } )
+        );
     }
 }
