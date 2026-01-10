@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { AuthInputComponent } from '../../components/auth-input/auth-input.component';
-import { AuthSubmitButtonComponent } from '../../components/auth-submit-button/auth-submit-button.component';
+import { AuthInputComponent } from '@/app/features/auth/components/auth-input/auth-input.component';
+import { AuthSubmitButtonComponent } from '@/app/features/auth/components/auth-submit-button/auth-submit-button.component';
 import { emailValidator, passwordValidator, LoginRequest } from '@/app/core/auth';
 
 @Component( {

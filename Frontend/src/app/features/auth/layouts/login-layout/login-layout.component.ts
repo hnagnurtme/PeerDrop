@@ -1,8 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { AuthSsoButtonComponent } from '../../components/auth-sso-button/auth-sso-button.component';
-import { LoginFormComponent } from '../../forms/login-form/login-form.component';
+import { AuthSsoButtonComponent } from '@/app/features/auth/components/auth-sso-button/auth-sso-button.component';
+import { LoginFormComponent } from '@/app/features/auth/forms/login-form/login-form.component';
 import { AuthFacade, LoginRequest } from '@/app/core/auth';
 import { Router } from '@angular/router';
 
