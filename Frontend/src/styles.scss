@@ -1,1 +1,123 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        background-color: #020406;
+    }
+}
+
+@layer utilities {
+    .glass-card {
+        background: rgba(10, 15, 20, 0.7);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+    }
+
+    .iridescent-border {
+        position: relative;
+    }
+
+    .iridescent-border::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        padding: 1px;
+        border-radius: 1.5rem;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(0, 242, 255, 0.2), rgba(255, 255, 255, 0.05));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .floating-shape {
+        position: absolute;
+        z-index: 0;
+        filter: blur(100px);
+        opacity: 0.15;
+    }
+
+    // Mesh grid background pattern
+    .mesh-grid {
+        position: fixed;
+        inset: 0;
+        background-image:
+            linear-gradient(rgba(16, 185, 129, 0.04) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(16, 185, 129, 0.04) 1px, transparent 1px);
+        background-size: 50px 50px;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .authenticate-button {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, #10b981 0%, #00f2ff 100%);
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(0, 242, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .authenticate-button:hover {
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), 0 0 50px rgba(0, 242, 255, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .authenticate-button::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -60%;
+        width: 20%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: rotate(30deg);
+        filter: blur(10px);
+        animation: shine 4s infinite;
+    }
+
+    .feature-card-refined {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(16, 185, 129, 0.1);
+        backdrop-filter: blur(10px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .feature-card-refined:hover {
+        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(255, 255, 255, 0.04);
+        transform: translateY(-4px);
+    }
+
+    .connector-line {
+        height: 1px;
+        background-image: repeating-linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.2) 8px, transparent 8px, transparent 16px);
+        position: relative;
+    }
+
+    .data-particle {
+        width: 4px;
+        height: 4px;
+        background: #10b981;
+        box-shadow: 0 0 8px #10b981;
+        position: absolute;
+        top: -1.5px;
+        border-radius: 1px;
+        opacity: 0.6;
+    }
+
+    .neon-text-glow {
+        text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+    }
+}

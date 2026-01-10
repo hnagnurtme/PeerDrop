@@ -6,6 +6,7 @@ export const API_URLS = {
         login: () => buildApiUrl( API_CONFIG.endpoints.auth.login ),
         logout: () => buildApiUrl( API_CONFIG.endpoints.auth.logout ),
         refresh: () => buildApiUrl( API_CONFIG.endpoints.auth.refresh ),
+        register: () => buildApiUrl( API_CONFIG.endpoints.auth.register ),
     },
     users: {
         profile: () => buildApiUrl( API_CONFIG.endpoints.users.profile ),
