@@ -53,15 +53,15 @@ public class UserService(IUserRepository userRepository, IMapper mapper, IFileSe
                    ?? throw new NotFoundException(ErrorMessages.UserNotFound, ErrorCodes.UserNotFound);
         await  ValidateFile(avatar);
         
-        var avatarResposne = await fileService.UploadFileAsync(avatar, cancellationToken);
+        var avatarResponse = await fileService.UploadFileAsync(avatar, cancellationToken);
 
         if (user.AvatarPublicId != null)
         {
             await fileService.DeleteFileByPublicIdAsync(user.AvatarPublicId, cancellationToken);
         }
         
-        user.Avatar = avatarResposne.SecureUrl;
-        user.AvatarPublicId = avatarResposne.PublicId;
+        user.Avatar = avatarResponse.SecureUrl;
+        user.AvatarPublicId = avatarResponse.PublicId;
         user.UpdatedAt = DateTime.UtcNow;
 
         var updatedUser = await userRepository.UpdateAsync(user, cancellationToken);

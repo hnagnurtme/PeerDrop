@@ -4,13 +4,13 @@
         <span
             class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">{{
             icon }}</span>
-        <input [type]="type" [placeholder]="placeholder" [value]="value()" [disabled]="disabled()"
+        <input #inputElement [type]="type" [placeholder]="placeholder" [value]="value()" [disabled]="disabled()"
             (input)="onInput($event)" (blur)="onBlur()"
             class="w-full bg-[#020406]/60 border border-white/10 rounded-xl py-4 pl-12 pr-4 text-white focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all placeholder:text-gray-600"
-            [class.border-red-500]="errorMessage && touched()"
-            [class.focus:border-red-500]="errorMessage && touched()" />
+            [class.border-toast-error]="errorMessage && touched()"
+            [class.focus:border-toast-error]="errorMessage && touched()" />
     </div>
     @if (errorMessage && touched()) {
-    <p class="text-red-400 text-xs mt-1 ml-1">{{ errorMessage }}</p>
+    <p class="text-toast-error text-xs mt-1 ml-1">{{ errorMessage }}</p>
     }
 </div>

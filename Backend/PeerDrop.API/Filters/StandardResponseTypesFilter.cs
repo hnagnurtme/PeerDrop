@@ -7,9 +7,6 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace PeerDrop.API.Filters;
 
-/// <summary>
-/// Automatically adds standard response types to endpoints based on conventions
-/// </summary>
 public class StandardResponseTypesFilter : IOperationFilter
 {
     public void Apply(OpenApiOperation operation, OperationFilterContext context)

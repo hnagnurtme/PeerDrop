@@ -140,14 +140,12 @@ public class AuthService(
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(expiryInMinutes),
             User = new UserInfo
             {
                 Id = user.Id,
                 Email = user.Email,
                 UserName = user.UserName,
                 FullName = user.FullName,
-                Role = user.Role.ToString(),
                 Avatar = user.Avatar
             }
         };

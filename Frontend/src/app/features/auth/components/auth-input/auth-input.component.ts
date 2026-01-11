@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef, signal } from '@angular/core';
+import { Component, Input, forwardRef, signal, ViewChild, ElementRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
@@ -7,7 +7,6 @@ import { CommonModule } from '@angular/common';
     standalone: true,
     imports: [ CommonModule, ReactiveFormsModule ],
     templateUrl: './auth-input.component.html',
-    styleUrls: [ './auth-input.component.scss' ],
     providers: [
         {
             provide: NG_VALUE_ACCESSOR,
@@ -22,6 +21,8 @@ export class AuthInputComponent implements ControlValueAccessor {
     @Input() type: 'text' | 'email' | 'password' = 'text';
     @Input() icon!: string;
     @Input() errorMessage = '';
+
+    @ViewChild( 'inputElement', { static: false } ) inputElement!: ElementRef<HTMLInputElement>;
 
     value = signal<string>( '' );
     disabled = signal<boolean>( false );
@@ -55,5 +56,9 @@ export class AuthInputComponent implements ControlValueAccessor {
     onBlur (): void {
         this.touched.set( true );
         this.onTouched();
+    }
+
+    focus (): void {
+        this.inputElement?.nativeElement?.focus();
     }
 }

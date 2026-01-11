@@ -8,7 +8,7 @@ public class RemoveVersionParameterFilter : IOperationFilter
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
         var versionParameter = operation.Parameters.FirstOrDefault(p => 
-            p.Name == "version" || p.Name == "api-version");
+            p.Name is "version" or "api-version");
         
         if (versionParameter != null)
         {

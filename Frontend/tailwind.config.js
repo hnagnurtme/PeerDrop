@@ -10,6 +10,10 @@ module.exports = {
                 'background-dark': '#020406',
                 'cyber-emerald': '#00ff9d',
                 'neon-cyan': '#00f2ff',
+                'toast-success': '#10b981',
+                'toast-error': '#ef4444',
+                'toast-warning': '#f59e0b',
+                'toast-info': '#3b82f6',
             },
             fontFamily: {
                 sans: [ 'Plus Jakarta Sans', 'sans-serif' ],

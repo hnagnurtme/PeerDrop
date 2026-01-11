@@ -1,0 +1,13 @@
+<div class="fixed top-10 right-4 z-[9999] flex flex-col gap-2 max-w-xs pointer-events-none">
+    @for (toast of toastService.toasts(); track toast.id) {
+    <div role="alert" aria-live="polite"
+        class="pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg shadow-lg backdrop-blur-md border animate-slide-in"
+        [ngClass]="getToastClasses(toast.type)">
+        <!-- Icon -->
+        <span class="material-symbols-outlined text-base flex-shrink-0">{{ getIcon(toast.type) }}</span>
+
+        <!-- Message -->
+        <p class="text-xs font-medium leading-tight">{{ toast.message }}</p>
+    </div>
+    }
+</div>
