@@ -1,0 +1,13 @@
+<div class="fixed top-4 right-4 z-[9999] flex flex-col gap-3 max-w-sm w-full pointer-events-none">
+    @for (toast of toastService.toasts(); track toast.id) {
+    <div class="pointer-events-auto p-4 rounded-xl shadow-2xl backdrop-blur-md border animate-slide-in flex items-start gap-3"
+        [class]="getToastClasses(toast.type)" role="alert" aria-live="polite">
+        <span class="material-icons text-xl flex-shrink-0">{{ getIcon(toast.type) }}</span>
+        <p class="flex-1 text-sm font-medium">{{ toast.message }}</p>
+        <button type="button" (click)="dismiss(toast.id)" class="opacity-60 hover:opacity-100 transition-opacity"
+            aria-label="Dismiss">
+            <span class="material-icons text-lg">close</span>
+        </button>
+    </div>
+    }
+</div>

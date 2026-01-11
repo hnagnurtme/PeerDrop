@@ -1,4 +1,4 @@
-import { Injectable, computed, signal } from "@angular/core";
+import { Injectable, signal } from "@angular/core";
 import { LoginRequest, RegisterRequest, User } from "./auth.model";
 import { AuthService } from "./auth.service";
 import { StorageService } from "@/app/core/services/storage.service";
@@ -13,7 +13,6 @@ export class AuthFacade {
     public readonly user = this._user.asReadonly();
     public readonly isAuthenticated = this._isAuthenticated.asReadonly();
     public readonly isLoading = this._isLoading.asReadonly();
-    public readonly currentUser = computed( () => this._user() );
 
     constructor (
         private authService: AuthService,

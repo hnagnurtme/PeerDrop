@@ -1,24 +1,53 @@
-<form [formGroup]="loginForm" class="space-y-6" (ngSubmit)="onSubmit()">
-    <auth-input label="Email Address" placeholder="name@enterprise.com" icon="alternate_email" type="email"
-        formControlName="email" [errorMessage]="emailError" />
+<form [formGroup]="loginForm" class="space-y-6" (ngSubmit)="onSubmit()" aria-label="Login form"
+    [class.pointer-events-none]="isLoading" [attr.aria-busy]="isLoading">
 
-    <div class="space-y-2">
-        <auth-input label="Password" placeholder="••••••••" icon="shield_lock" type="password"
-            formControlName="password" [errorMessage]="passwordError" />
+    <!-- Email Input -->
+    <auth-input #emailInputRef [label]="_translations.emailLabel" [placeholder]="_translations.emailPlaceholder"
+        icon="alternate_email" type="email" [formControl]="emailControl" [errorMessage]="emailError"
+        aria-describedby="email-error" autocomplete="email" />
 
-        <div class="flex items-center justify-between mt-4 px-1">
-            <label class="flex items-center gap-2 cursor-pointer group">
-                <input
-                    class="w-4 h-4 rounded border-gray-700 bg-gray-800 text-primary focus:ring-primary focus:ring-offset-background-dark"
-                    type="checkbox" formControlName="rememberMe" />
-                <span class="text-xs text-gray-400 group-hover:text-gray-200 transition-colors">Remember this
-                    device</span>
-            </label>
-            <a class="text-xs font-bold text-primary hover:text-primary-hover transition-colors" href="#">Forgot?</a>
-        </div>
+    <!-- Password Input -->
+    <auth-input [label]="_translations.passwordLabel" [placeholder]="_translations.passwordPlaceholder"
+        [icon]="passwordToggleIcon" [type]="passwordInputType" [formControl]="passwordControl"
+        [errorMessage]="passwordError" aria-describedby="password-error" autocomplete="current-password">
+
+        <button *ngIf="shouldEnablePasswordToggle" type="button"
+            class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors"
+            (click)="togglePasswordVisibility()" [attr.aria-label]="passwordToggleLabel" [disabled]="isLoading">
+            <span class="material-icons text-sm">
+                {{ passwordToggleIcon }}
+            </span>
+        </button>
+    </auth-input>
+
+    <!-- Remember Me & Forgot Password -->
+    <div class="flex items-center justify-between px-1" *ngIf="shouldEnableRememberMe">
+        <label class="flex items-center gap-2 cursor-pointer group">
+            <input type="checkbox"
+                class="w-4 h-4 rounded border-gray-700 bg-gray-800 text-primary focus:ring-primary focus:ring-offset-gray-900"
+                [formControl]="rememberMeControl" />
+            <span class="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">
+                {{ _translations.rememberMe }}
+            </span>
+        </label>
+
+        <button type="button"
+            class="text-sm font-medium text-primary hover:text-primary-hover transition-colors disabled:opacity-50"
+            (click)="onForgotPassword()" [disabled]="isLoading">
+            {{ _translations.forgotPassword }}
+        </button>
     </div>
 
+    <!-- Submit Button -->
     <div class="pt-4">
-        <auth-submit-button text="Authenticate" icon="fingerprint" />
+        <auth-submit-button [text]="isLoading ? _translations.authenticating : _translations.submitButton"
+            [icon]="isLoading ? 'pending' : 'login'" [disabled]="isLoading || loginForm.invalid" [isLoading]="isLoading"
+            type="submit" fullWidth />
     </div>
 </form>
+
+<!-- Accessibility Live Region -->
+<div aria-live="polite" aria-atomic="true" class="sr-only">
+    <div *ngIf="emailError">{{ emailError }}</div>
+    <div *ngIf="passwordError">{{ passwordError }}</div>
+</div>
