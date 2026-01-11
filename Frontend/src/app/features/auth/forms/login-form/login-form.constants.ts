@@ -16,14 +16,14 @@ export const DEFAULT_TRANSLATIONS: Required<LoginFormTranslations> = {
     passwordPlaceholder: 'Enter your password',
 
     // Checkbox
-    rememberMe: 'Remember this device',
+    rememberMe: 'Remember me',
 
     // Links
     forgotPassword: 'Forgot password?',
 
     // Buttons
-    submitButton: 'Sign In',
-    authenticating: 'Signing in...',
+    submitButton: 'Login',
+    authenticating: 'Logging in...',
 
     // Password toggle
     showPassword: 'Show password',
@@ -43,7 +43,7 @@ export const VIETNAMESE_TRANSLATIONS: Required<LoginFormTranslations> = {
     emailPlaceholder: 'Nhập email của bạn',
     passwordLabel: 'Mật khẩu',
     passwordPlaceholder: 'Nhập mật khẩu của bạn',
-    rememberMe: 'Ghi nhớ thiết bị này',
+    rememberMe: 'Ghi nhớ tôi',
     forgotPassword: 'Quên mật khẩu?',
     submitButton: 'Đăng nhập',
     authenticating: 'Đang đăng nhập...',

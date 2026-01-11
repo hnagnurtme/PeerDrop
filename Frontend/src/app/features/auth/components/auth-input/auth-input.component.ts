@@ -58,7 +58,6 @@ export class AuthInputComponent implements ControlValueAccessor {
         this.onTouched();
     }
 
-    /** Focus the native input element */
     focus (): void {
         this.inputElement?.nativeElement?.focus();
     }
