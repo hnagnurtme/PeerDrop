@@ -83,8 +83,9 @@ jobs:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USERNAME }}
           key: ${{ secrets.VM_SSH_KEY }}
-          source: "docker-compose.prod.yml,Nginx/peerdrop.conf"
+          source: "docker-compose.prod.yml,Nginx/"
           target: "~/peerdrop/"
+          strip_components: 0
       
       - name: Deploy to GCP VM via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -126,16 +127,27 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/peerdrop-backend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/peerdrop-frontend:latest
             
+            # Setup Nginx with SSL (run install.sh - only first time or if SSL missing)
+            if [ ! -d "/etc/letsencrypt/live/peerdrop.cloud.hnagnurtme.id.vn" ]; then
+              echo "Setting up Nginx with SSL..."
+              cd ~/peerdrop/Nginx
+              chmod +x install.sh
+              sudo ./install.sh peerdrop.cloud.hnagnurtme.id.vn ${{ secrets.SSL_EMAIL }}
+            else
+              echo "SSL already configured, updating Nginx config only..."
+              sudo cp ~/peerdrop/Nginx/peerdrop.conf /etc/nginx/sites-available/peerdrop
+              sudo cp ~/peerdrop/Nginx/ssl-params.conf /etc/nginx/snippets/ssl-params.conf
+              sudo nginx -t && sudo systemctl reload nginx
+            fi
+            
+            cd ~/peerdrop
+            
             # Stop old containers and start new ones
             docker-compose -f docker-compose.prod.yml down
             docker-compose -f docker-compose.prod.yml up -d
-            
-            # Apply Nginx config
-            sudo cp ~/peerdrop/Nginx/peerdrop.conf /etc/nginx/sites-available/peerdrop
-            sudo ln -sf /etc/nginx/sites-available/peerdrop /etc/nginx/sites-enabled/
-            sudo nginx -t && sudo systemctl reload nginx
             
             # Cleanup
             docker image prune -f
             
             echo "✅ Deployed PeerDrop v${{ steps.version.outputs.VERSION }} successfully!"
+            echo "🔒 SSL Status: $(sudo certbot certificates | grep peerdrop.cloud.hnagnurtme.id.vn || echo 'Not configured')"
